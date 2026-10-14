@@ -4,6 +4,18 @@ import { loadAccount, serviceError } from "@/lib/auth/server";
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import { AuthForm, FacilitySelection, LogoutForm } from "./account-forms";
+import fullLogo from "../../public/brand/Full Main Logo.png";
+
+export function WelcomeLogin() {
+  return <div className="welcome-login">
+    <Image className="welcome-logo" src={fullLogo} alt="Hospital2Hospital — Better connections. Less waste." sizes="(max-width: 600px) 90vw, 520px" preload/>
+    <section className="panel welcome-card" aria-labelledby="welcome-title">
+      <h1 id="welcome-title">Welcome back!</h1>
+      <p className="welcome-description">Sign in to find your next essential.</p>
+      <AuthForm kind="login"/>
+    </section>
+  </div>;
+}
 
 export function AuthenticationPage({ kind, notice }: { kind: "login" | "register" | "forgot" | "update" | "resend"; notice?: string }) {
   const titles = { login: "Welcome back", register: "Create your facility account", forgot: "Recover your account", update: "Set a new password", resend: "Confirm your email" };
@@ -15,7 +27,7 @@ export function AuthenticationPage({ kind, notice }: { kind: "login" | "register
     resend: "Request a new confirmation link if yours expired or did not arrive.",
   };
   return <div className="container page-section auth-container">
-    <div className="page-heading"><span className="eyebrow">HOSPITAL2HOSPITAL ACCOUNTS</span><h1>{titles[kind]}</h1><p>{descriptions[kind]}</p></div>
+    <div className="page-heading">{kind !== "login" && <span className="eyebrow">HOSPITAL2HOSPITAL ACCOUNTS</span>}<h1>{titles[kind]}</h1><p>{descriptions[kind]}</p></div>
     {getAppMode() === "demo" ? <div className="panel"><h2>Account features are not configured</h2><p>This application is explicitly in demo mode. Configure connected mode using SUPABASE_SETUP.md to test accounts.</p><Link className="button primary" href="/marketplace">Browse demo inventory</Link></div>
       : <div className="panel">
         {notice && <p className="notice" role="status">{notice}</p>}

@@ -1,5 +1,9 @@
 # Hospital2Hospital context refresh
 
+## October 14 update: signed-out welcome page
+
+Connected root / now checks verified Supabase Auth on the server: signed-out visitors see a standalone white page with Full Main Logo above a welcome/login card; confirmed signed-in users redirect to Marketplace with existing query parameters preserved. Unconfirmed sessions go to the confirmation notice. Auth service failures do not become anonymous/demo fallbacks. /auth/login retains the existing shell for reauthentication but removes the accounts eyebrow above Welcome back. Direct public Marketplace browsing and demo root behavior remain available; this is a landing-page change, not a new access restriction. No migration or environment changes.
+
 ## October 14 update: header wordmark and marketplace tagline
 
 Shared page headers now use the owner-supplied public/brand/H2H Words Only Logo.png instead of the compact logo/text combination; the image links to /marketplace. Footer and account fallback retain the compact logo. Marketplace tagline is 14px (13px on mobile), below the main heading size. No migration or environment changes. User authorized checks, GitHub publication and Vercel deployment for this cosmetic update.

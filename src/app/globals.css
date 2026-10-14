@@ -59,3 +59,5 @@
 .header nav a.selected,.header nav a:hover,.eyebrow,.text-link,.featured-listing strong,.notice,.badge{color:var(--primary-hover)}
 
 .header-brand{flex-shrink:0;min-height:44px}.brand-words-logo{display:block;width:320px;height:auto}.marketplace-tagline{font-size:14px;letter-spacing:1.3px;line-height:1.5}@media(max-width:1150px){.brand-words-logo{width:280px}}@media(max-width:500px){.brand-words-logo{width:160px}.marketplace-tagline{font-size:13px}}@media(max-width:360px){.brand-words-logo{width:140px}}
+
+.welcome-page{min-height:100dvh;background:var(--white);padding:28px 20px 48px}.welcome-login{width:100%;max-width:520px;margin:0 auto}.welcome-logo{display:block;width:100%;height:auto;margin:0 auto 20px}.welcome-card{background:var(--white);padding:28px}.welcome-card h1{font-size:30px;letter-spacing:-.7px;text-align:center}.welcome-description{text-align:center;color:var(--muted);margin-top:8px}.welcome-card .account-form>.button{width:100%}@media(max-width:500px){.welcome-page{padding:16px 18px 32px}.welcome-card{padding:22px}.welcome-card h1{font-size:27px}}

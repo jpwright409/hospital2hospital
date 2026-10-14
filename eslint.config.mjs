@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Temporary browser profiles/screenshots are already excluded from Git.
+    ".browser-test*/**",
   ]),
 ]);
 
