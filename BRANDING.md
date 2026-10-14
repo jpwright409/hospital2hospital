@@ -4,8 +4,9 @@ Source: project_sources/H2H Brand Guidelines.docx (owner supplied October 14). O
 
 ## Assets
 
+- H2H Words Only Logo.png: shared header wordmark, linked directly to /marketplace; responsive width preserves the original transparent image and proportions.
 - Full Main Logo.png: illustrated brand panel on About Us, displayed without cropping.
-- Small Logo.png: shared navigation/footer signature and account-button fallback; existing personal avatars remain visible when present.
+- Small Logo.png: footer signature and account-button fallback; existing personal avatars remain visible when present.
 - 256bitH2H.ico: copied to src/app/favicon.ico. It contains seven sizes from 16px through 256px.
 - Updated src/app/favicon.ico.png: supplied 256px PNG, copied to src/app/apple-icon.png for the touch icon. The original remains intact. Despite its filename, this is PNG content and is not itself a valid .ico file.
 - H2Hlogo.ico.png: additional original 256px PNG reference retained in public/brand.

@@ -1,5 +1,9 @@
 # Hospital2Hospital context refresh
 
+## October 14 update: header wordmark and marketplace tagline
+
+Shared page headers now use the owner-supplied public/brand/H2H Words Only Logo.png instead of the compact logo/text combination; the image links to /marketplace. Footer and account fallback retain the compact logo. Marketplace tagline is 14px (13px on mobile), below the main heading size. No migration or environment changes. User authorized checks, GitHub publication and Vercel deployment for this cosmetic update.
+
 ## October 14 update: header/footer background separation
 
 Main background is now almost white (35% brand off-white mixed with white), while header/status banner/footer use a slightly darker blue-gray (5% brand navy mixed with off-white). Derived root background/chrome-background tokens keep future palette changes centralized. No migration. On October 14 the user authorized publishing this background adjustment to GitHub and the existing Vercel production project. Verify the deployment status for its result.
