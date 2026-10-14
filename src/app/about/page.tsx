@@ -1,2 +1,7 @@
 import Link from "next/link";
-export default function Page() {return <div className="container page-section conversation-container"><h1>About Hospital2Hospital</h1><p>Hospital2Hospital connects healthcare facilities with excess surgical supplies and equipment to facilities that need them.</p><section className="panel"><h2>Better connections. Less excess.</h2><p>Our marketplace is free to use. Facilities publish their actual available inventory, find supplies and equipment, and communicate directly with other approved facilities.</p><p>We do not process payments, collect transaction fees, or arrange shipping. The two facilities discuss availability, suitability, price and any arrangements directly.</p></section><p className="notice">Initial mission copy. The owners&apos; final story and approved wording are still to be supplied.</p><Link className="button primary" href="/marketplace">Explore inventory</Link><Link className="button secondary" href="/refer">Refer a facility</Link></div>;}
+import content from "@/lib/owner-content.json";
+export default function Page() {
+ return <div className="container page-section conversation-container owner-content-page"><h1>About Us</h1>
+ {content.about.map(section=><section className="panel" key={section.title}><h2>{section.title}</h2><p>{section.body}</p></section>)}
+ <div className="account-links"><Link className="button primary" href="/marketplace">Explore inventory</Link><Link className="button secondary" href="/refer">Refer a facility</Link></div></div>;
+}

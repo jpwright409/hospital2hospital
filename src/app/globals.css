@@ -43,3 +43,5 @@
 .watchlist-page h1{font-size:30px;line-height:1.2;letter-spacing:-.6px}.watchlist-create>h2{font-size:26px;line-height:1.2;letter-spacing:-.5px}.watchlist-browse{padding:24px 0}.watchlist-browse>.button,.watchlist-create{margin:0}
 
 .watchlist-options{display:flex;align-items:center;gap:16px 32px;flex-wrap:wrap}.watchlist-options>label{display:inline-flex;flex-direction:row;align-items:center;gap:8px;margin:0}.watchlist-options input[type=checkbox]{width:16px;height:16px;margin:0;flex-shrink:0;accent-color:var(--primary)}
+
+.owner-content-page>h1{font-size:38px;line-height:1.2;letter-spacing:-1px;margin-bottom:28px}.owner-content-page>.panel{margin-bottom:24px}.owner-content-page .panel h2{font-size:24px;margin-bottom:14px}.owner-content-page .panel p{font-size:14px;line-height:1.8;color:var(--foreground)}.owner-content-page summary{cursor:pointer;font-size:14px;line-height:1.6}

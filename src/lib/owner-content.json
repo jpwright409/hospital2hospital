@@ -1,0 +1,70 @@
+{
+    "sources":  [
+                    "FAQs Page_Hospital2Hospital.docx",
+                    "About Us Page_Hospital2Hospital.docx"
+                ],
+    "faq":  [
+                {
+                    "question":  "Does it cost anything?",
+                    "answer":  "No! Hospital2Hospital has no listing fees, transaction fees, or subscriptions."
+                },
+                {
+                    "question":  "Is there a contract of any kind?",
+                    "answer":  "No!"
+                },
+                {
+                    "question":  "Once I list my products, am I required to maintain the listing on Hospital2Hospital?",
+                    "answer":  "No! This is your listing. You can amend, deactivate, or delete the listing at any time. If you find a better deal somewhere else, great!"
+                },
+                {
+                    "question":  "How does facility approval work?",
+                    "answer":  "Register with a work email, confirm it, and submit your facility. A Hospital2Hospital administrator then verifies and approves the request (no longer than 24 hours). Once you are approved you are able to start listing inventory and contacting other facilities who have products listed."
+                },
+                {
+                    "question":  "Can I list a product missing from the catalog?",
+                    "answer":  "Yes! Choose Propose a new reference product, enter manufacturer, catalog/SKU, product type and description. Then add your facility’s stock."
+                },
+                {
+                    "question":  "Can a price be negotiable?",
+                    "answer":  "Yes! Sellers can mark an asking price negotiable, including a zero asking price, and discuss offers directly with the buyer."
+                },
+                {
+                    "question":  "What happens when I contact a seller?",
+                    "answer":  "Facilities within the Hospital2Hospital platform can start a private conversation over the platform. Additionally, a seller may also elect to share a designated business email or phone number that allows interested buyers to contact them directly. Personal account and backup contact information stays private."
+                },
+                {
+                    "question":  "Can I reactivate a listing?",
+                    "answer":  "Yes! A listing that is deactivated or marked as sold is retained and is able to be reactivated. Deleting a listing is a separate listing option."
+                },
+                {
+                    "question":  "What is the difference between Saves and Watchlists?",
+                    "answer":  "Saves notify you on the platform when an existing saved listing changes. Watchlists are able to be set up to notify you when a new posting is added that matches your selected filters."
+                },
+                {
+                    "question":  "Can I upload item photos?",
+                    "answer":  "Yes! Photos are optional. However, it is recommended to upload photos especially for expensive or large quantity items."
+                },
+                {
+                    "question":  "Does an invitation approve a facility or add a colleague to my profile?",
+                    "answer":  "No. Referral emails invite someone to register. Normal email onboarding and facility approvals still apply."
+                },
+                {
+                    "question":  "How should I verify an item I want to purchase?",
+                    "answer":  "Confirm the SKU, condition, packaging, quantity, expiration and suitability directly with the seller. Coordinate payment and shipping directly with them."
+                }
+            ],
+    "about":  [
+                  {
+                      "body":  "At Hospital2Hospital, our mission is to eliminate healthcare waste and put inventory control directly back into the hands of medical facilities. Across the country, healthcare facilities of all types face a recurring challenge: high-value surgical supplies and specialized equipment sit unused due to shifting surgeon preferences, strict vendor return policies, or fluctuating patient needs. Unused inventory often sits on shelves until it expires—costing facilities thousands of dollars—or gets sold to gray-market resellers for a fraction of its worth. We believe there is a better way to steward these resources, keep financial value within the healthcare system, and ensure vital medical supplies go to the facilities that need them most.",
+                      "title":  "Our Mission"
+                  },
+                  {
+                      "body":  "Hospital2Hospital offers a streamlined, fee-free solution designed specifically for verified healthcare providers. Functioning as a peer-to-peer marketplace, our platform allows verified healthcare facilities to directly list, browse, and acquire surplus inventory and equipment. By facilitating direct communication between buying and selling facilities without charging commissions or controlling the transaction, we break down traditional barriers and eliminate hefty third-party fees. Whether a rural hospital is looking to recoup funds on excess items or a surgery center is seeking essential equipment at lower costs, Hospital2Hospital simplifies direct facility-to-facility exchanges.",
+                      "title":  "The Opportunity"
+                  },
+                  {
+                      "body":  "We envision a more sustainable and collaborative healthcare ecosystem where supply chain inefficiencies no longer drain critical operating budgets. By creating a secure, verified community of healthcare partners, Hospital2Hospital aims to significantly reduce medical material waste while fostering direct cooperation among hospitals and surgery centers nationwide. Through transparency, ease of use, and shared purpose, we are building a network where surplus equipment finds a second life, operational costs are minimized, and resources are optimized to support exceptional patient care.",
+                      "title":  "Our Vision"
+                  }
+              ]
+}

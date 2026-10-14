@@ -1,5 +1,9 @@
 # Hospital2Hospital context refresh
 
+## October 13 update: owner-approved About/FAQ and DNS troubleshooting
+
+About/FAQ replace starter copy using src/lib/owner-content.json extracted from the supplied October 13 Word documents. Three About sections and 12 FAQ entries; only the question typo "am I require" corrected to "am I required". Approved copy includes no contracts and approval within 24 hours; this is an operational commitment, not automatic approval or changed permissions. On October 13 the user authorized pushing these content changes to GitHub and deploying through the existing Vercel project. Check GitHub/Vercel status for the actual deployment result. GoDaddy screenshot shows CNAME send -> send.forge.rmta.net and TXT resend._domainkey; syntax appears valid, exact failure unconfirmed. Check record-name conflicts/one-at-a-time save, or use Resend Auto Configure with receiving disabled to retain Google Workspace. Never replace the current Resend-required records with older AWS examples merely because generic guides differ.
+
 ## October 11 update: launch accounts and repository
 
 GitHub target: https://github.com/jpwright409/hospital2hospital.git. Vercel account supplied: paul-3870; user will import after code is pushed. Resend account exists under paul@babursolutions.com and key lives only in ignored .env.local. Existing Supabase project is the accepted launch choice. See HOSTING_SETUP.md for DNS/Workspace alias setup and remaining upload/scheduled-email work. No hosted configuration or email sends are implied by the initial GitHub publication.

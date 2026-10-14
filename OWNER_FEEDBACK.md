@@ -13,7 +13,7 @@ Updated October 11, 2026. This audit describes local implementation, not hosted 
 | User-uploaded photos | Already implemented: real seller photos, no stock-image dependency, six images maximum, validated JPEG/PNG/WebP input, private authorized reads. Existing functionality preserved. |
 | Filter by facility | Added public seller-facility filter using safe id/name projections for publicly available facilities; distinct from private active-facility selection. |
 | Procedure filters | Added ENT, Orthopedics, Plastic Surgery and other procedure options, separate from product categories. Filters/sort/pagination remain in the URL. |
-| FAQ/About | `/faq` and `/about` added with factual starter content and an explicit owner-copy notice. Owner-authored final story, policies and support copy still needed. |
+| FAQ/About | `/faq` and `/about` now use the October 13 owner-approved Word documents: 12 FAQ answers and Mission/Opportunity/Vision sections. Starter-copy notices removed. |
 | Refer a facility | `/refer`: authenticated eligible approved-facility members queue a personalized plain-text invitation. Retry UUIDs, 10/day per user and one invitation/address/week limit duplicates/abuse. Invitation grants no access; recipient completes ordinary signup and approval. Email requires provider/worker setup. |
 | Maintain a watchlist and email on new items | `/watchlist`: create/edit/pause/delete up to 20 account-private watches; combine manufacturer, exact SKU, words, procedure and type. New matching stock is recorded transactionally and optionally queues email to the verified account address. Matches are not reservations. Email requires provider/worker setup. |
 | Contact/Buy action | No Buy/cart/checkout. Contact Seller keeps a shared private facility conversation and optionally displays a seller-designated business contact to eligible approved buyers. Personal Auth email and secondary contact are never exposed. Sharing defaults off. |
@@ -31,7 +31,7 @@ For an expanded reference catalog, obtain a manufacturer/distributor feed or an 
 
 1. Apply migrations 009, 010 and 011 in order after 008; restart/rebuild and run the live checklist in SUPABASE_SETUP.md. No remote migrations were run here.
 2. Configure the optional email provider/sender and schedule the delivery worker before treating referrals/watchlist emails as live. No real emails were sent or provider accounts configured. Supabase Auth confirmation/recovery delivery is separate.
-3. Supply final FAQ/About/support/policy copy and decide on the slogan.
+3. FAQ/About copy supplied October 13 and implemented locally. Support/policy copy and slogan decisions remain. The approved 24-hour review commitment is an operator responsibility; approvals remain manual.
 4. Decide whether catalog expansion warrants an additional reviewed import. Specify source and scope; do not assume competitor coverage.
 5. Secondary contact information provides continuity information, not a replacement staff account. Staff invitations/role management and ownership succession remain separate future workflows; no unsafe self-join or automatic ownership transfer was introduced.
 
