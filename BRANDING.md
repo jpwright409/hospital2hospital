@@ -32,3 +32,7 @@ Calculated contrast: white on Ocean Teal 4.71:1; navy on cool off-white 11.21:1;
 ## Local review
 
 Desktop Marketplace (1440px), About Us (1280px), and an emulated 390px mobile Marketplace were inspected in headless Chrome using explicit demo mode, without hosted inventory/account operations. Mobile document width matched viewport width and the logo loaded successfully. Screenshots/profiles are in ignored .browser-test-brand. Existing account/inventory permissions and data flows are unchanged. No migration is needed. These local checks do not certify hosted authentication or a production deployment.
+
+## Page and chrome separation
+
+Main page background mixes 35% cool off-white with white for an almost-white surface. Header, top status banner and footer mix 5% navy into cool off-white for a slightly darker blue-gray frame. Both remain derived from the central brand tokens. White cards/forms and their borders remain distinct.

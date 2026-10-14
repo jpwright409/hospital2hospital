@@ -1,5 +1,9 @@
 # Hospital2Hospital context refresh
 
+## October 14 update: header/footer background separation
+
+Main background is now almost white (35% brand off-white mixed with white), while header/status banner/footer use a slightly darker blue-gray (5% brand navy mixed with off-white). Derived root background/chrome-background tokens keep future palette changes centralized. No migration. On October 14 the user authorized publishing this background adjustment to GitHub and the existing Vercel production project. Verify the deployment status for its result.
+
 ## October 14 update: supplied logos and brand palette
 
 Read project_sources/H2H Brand Guidelines.docx and applied its Navy/Teal/Aqua/Seafoam/Pale Aqua/Slate/Off-white palette in centralized CSS tokens, keeping accessible darker text shades and red/amber operational states. Original PNG logos are untouched; compact H2H appears in header/footer/account fallback and the full illustrated main logo on About Us. The supplied favicon replacement was actually PNG named favicon.ico.png; genuine multi-size 256bitH2H.ico is copied to src/app/favicon.ico and supplied PNG to apple-icon.png. See BRANDING.md for asset mapping, contrast and local desktop/mobile visual checks. No migration is needed. On October 14 the user authorized publishing the branding update to GitHub and the existing Vercel production project; verify the deployment status for its result.
