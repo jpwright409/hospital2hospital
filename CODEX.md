@@ -1,5 +1,9 @@
 # Hospital2Hospital context refresh
 
+## October 14 update: supplied logos and brand palette
+
+Read project_sources/H2H Brand Guidelines.docx and applied its Navy/Teal/Aqua/Seafoam/Pale Aqua/Slate/Off-white palette in centralized CSS tokens, keeping accessible darker text shades and red/amber operational states. Original PNG logos are untouched; compact H2H appears in header/footer/account fallback and the full illustrated main logo on About Us. The supplied favicon replacement was actually PNG named favicon.ico.png; genuine multi-size 256bitH2H.ico is copied to src/app/favicon.ico and supplied PNG to apple-icon.png. See BRANDING.md for asset mapping, contrast and local desktop/mobile visual checks. No migration is needed. On October 14 the user authorized publishing the branding update to GitHub and the existing Vercel production project; verify the deployment status for its result.
+
 ## October 13 update: owner-approved About/FAQ and DNS troubleshooting
 
 About/FAQ replace starter copy using src/lib/owner-content.json extracted from the supplied October 13 Word documents. Three About sections and 12 FAQ entries; only the question typo "am I require" corrected to "am I required". Approved copy includes no contracts and approval within 24 hours; this is an operational commitment, not automatic approval or changed permissions. On October 13 the user authorized pushing these content changes to GitHub and deploying through the existing Vercel project. Check GitHub/Vercel status for the actual deployment result. GoDaddy screenshot shows CNAME send -> send.forge.rmta.net and TXT resend._domainkey; syntax appears valid, exact failure unconfirmed. Check record-name conflicts/one-at-a-time save, or use Resend Auto Configure with receiving disabled to retain Google Workspace. Never replace the current Resend-required records with older AWS examples merely because generic guides differ.

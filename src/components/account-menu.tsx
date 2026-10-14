@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import compactLogo from "../../public/brand/Small Logo.png";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { saveProfile } from "@/app/profile-actions";
@@ -84,7 +85,7 @@ export function AccountMenu() {
       if (e.key === "ArrowDown" && e.target === trigger.current) { e.preventDefault(); setOpen(true); requestAnimationFrame(() => menu.current?.querySelector("a")?.focus()); }
     }}>
     <button ref={trigger} type="button" className="button primary header-cta account-menu-trigger" aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}>
-      {profile?.avatar ? <Image src={profile.avatar} alt="" width={24} height={24} unoptimized/> : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z"/></svg>}My account <span aria-hidden="true">▾</span>
+      {profile?.avatar ? <Image src={profile.avatar} alt="" width={24} height={24} unoptimized/> : <span className="account-brand-mark"><Image src={compactLogo} alt="" width={32} height={16} sizes="32px"/></span>}My account <span aria-hidden="true">▾</span>
     </button>
     <div className="account-menu-links" id={id} hidden={!open}><Link href="/account" onClick={() => setOpen(false)}>Account home</Link><button type="button" onClick={edit}>Edit profile</button><LogoutForm/></div>
     <span className="sr-only" role="status">{notice}</span>
