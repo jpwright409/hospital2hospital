@@ -6,13 +6,15 @@ import Image from "next/image";
 import { AuthForm, FacilitySelection, LogoutForm } from "./account-forms";
 import fullLogo from "../../public/brand/Full Main Logo.png";
 
-export function WelcomeLogin() {
+export function WelcomeLogin({ kind = "login" }: { kind?: "login" | "register" | "forgot" | "resend" }) {
+  const titles = { login: "Welcome back!", register: "Create your facility account", forgot: "Recover your account", resend: "Confirm your email" };
+  const descriptions = { login: "Sign in to find your next essential.", register: "Confirm your work email, then submit your facility for approval.", forgot: "Request a secure email link to reset your password.", resend: "Request a new confirmation link if yours expired or did not arrive." };
   return <div className="welcome-login">
     <Image className="welcome-logo" src={fullLogo} alt="Hospital2Hospital — Better connections. Less waste." sizes="(max-width: 600px) 90vw, 520px" preload/>
     <section className="panel welcome-card" aria-labelledby="welcome-title">
-      <h1 id="welcome-title">Welcome back!</h1>
-      <p className="welcome-description">Sign in to find your next essential.</p>
-      <AuthForm kind="login"/>
+      <h1 id="welcome-title">{titles[kind]}</h1>
+      <p className="welcome-description">{descriptions[kind]}</p>
+      <AuthForm key={kind} kind={kind} welcome/>
     </section>
   </div>;
 }

@@ -17,8 +17,10 @@ export function ActionForm({ action, children, submit, className = "" }: {
   </form>;
 }
 
-export function AuthForm({ kind }: { kind: "register" | "login" | "forgot" | "update" | "resend" }) {
+export function AuthForm({ kind, welcome = false }: { kind: "register" | "login" | "forgot" | "update" | "resend"; welcome?: boolean }) {
   const password = kind !== "forgot" && kind !== "resend";
+  const loginPath = welcome ? "/" : "/auth/login";
+  const forgotPath = welcome ? "/?welcome=forgot" : "/auth/forgot-password";
   return <>
     <ActionForm action={{ register, login, forgot: forgotPassword, update: updatePassword, resend: resendConfirmation }[kind]}
       submit={{ register: "Create account", login: "Log in", forgot: "Request recovery link", update: "Update password", resend: "Request confirmation email" }[kind]}>
@@ -30,9 +32,9 @@ export function AuthForm({ kind }: { kind: "register" | "login" | "forgot" | "up
       {kind === "update" && <label>Confirm new password<input name="confirm_password" type="password" required minLength={12} maxLength={128} autoComplete="new-password"/></label>}
     </ActionForm>
     <div className="account-links">
-      {kind === "login" && <><Link href="/auth/forgot-password">Forgot password?</Link><Link href="/auth/register">Create an account</Link><Link href="/auth/resend-confirmation">Resend confirmation</Link></>}
-      {kind === "register" && <><Link href="/auth/login">Already have an account? Log in</Link><Link href="/auth/forgot-password">Recover an account</Link></>}
-      {(kind === "forgot" || kind === "resend") && <Link href="/auth/login">Back to login</Link>}
+      {kind === "login" && <><Link href={forgotPath}>Forgot password?</Link><Link href={welcome ? "/?welcome=register" : "/auth/register"}>Create an account</Link><Link href={welcome ? "/?welcome=resend" : "/auth/resend-confirmation"}>Resend confirmation</Link></>}
+      {kind === "register" && <><Link href={loginPath}>Already have an account? Log in</Link><Link href={forgotPath}>Recover an account</Link></>}
+      {(kind === "forgot" || kind === "resend") && <Link href={loginPath}>Back to login</Link>}
       {kind === "update" && <Link href="/account">Continue to your account</Link>}
     </div>
   </>;

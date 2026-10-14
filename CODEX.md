@@ -1,5 +1,9 @@
 # Hospital2Hospital context refresh
 
+## October 14 update: welcome account cards
+
+Welcome-page Forgot password, Create account and Resend confirmation links now select their standard auth forms on /?welcome=forgot|register|resend, retaining the white background and full logo. Back-to-login and registration recovery links stay in the welcome flow. Only recognized card values are accepted; invalid values show login. AuthForm is remounted on card changes to reset entered fields and feedback. Existing /auth/* routes keep the normal shell for reauthentication; auth actions/email callbacks are unchanged. Signed-in root redirects strip the welcome-only parameter while preserving inventory queries. This is presentation only; public inventory access/RLS is unchanged. No migration or environment changes.
+
 ## October 14 update: signed-out welcome page
 
 Connected root / now checks verified Supabase Auth on the server: signed-out visitors see a standalone white page with Full Main Logo above a welcome/login card; confirmed signed-in users redirect to Marketplace with existing query parameters preserved. Unconfirmed sessions go to the confirmation notice. Auth service failures do not become anonymous/demo fallbacks. /auth/login retains the existing shell for reauthentication but removes the accounts eyebrow above Welcome back. Direct public Marketplace browsing and demo root behavior remain available; this is a landing-page change, not a new access restriction. No migration or environment changes.
