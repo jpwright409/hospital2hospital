@@ -1,4 +1,5 @@
 "use client";
+import { imageUploadSizeError, IMAGE_UPLOAD_LIMIT_LABEL } from "@/lib/upload-limits.mjs";
 import {useActionState,useRef,useState} from "react";
 import {submitSupport,updateSupportStatus} from "@/app/support-actions";
 import {ActionForm} from "./account-forms";
@@ -16,7 +17,7 @@ export function SupportForm({id,name,email,facility,screenshotReady}:{id:string;
  <label>Phone (optional)<input name="contact_phone" type="tel" maxLength={40} autoComplete="tel"/></label>
  <label>Facility (optional)<input name="facility_name" maxLength={160} autoComplete="organization" defaultValue={facility}/></label>
  <label>Issue<textarea name="issue" required minLength={10} maxLength={5000} rows={6} placeholder="Describe the problem, the page you were using, and steps to reproduce it."/></label>
- <label>Screenshot (optional)<input name="screenshot" type="file" accept="image/jpeg,image/png,image/webp" disabled={!screenshotReady}/><small>One JPEG, PNG or WebP up to 5 MB. Redact patient information, passwords and API keys.</small></label>
+ <label>Screenshot (optional)<input name="screenshot" type="file" onChange={event=>{event.currentTarget.setCustomValidity(imageUploadSizeError(event.currentTarget.files?.[0]?.size ?? 0));event.currentTarget.reportValidity();}} accept="image/jpeg,image/png,image/webp" disabled={!screenshotReady}/><small>One JPEG, PNG or WebP up to {IMAGE_UPLOAD_LIMIT_LABEL}. Redact patient information, passwords and API keys.</small></label>
  {!screenshotReady && <p className="notice">Screenshots are not configured yet. You can submit a text-only ticket.</p>}
  </fieldset>{state.error && <p className="error" role="alert">{state.error}{state.ticketId && <> Ticket reference: {state.ticketId}. Keep this form unchanged to retry the screenshot.</>}</p>}
  {state.success && <p className="notice" role="status">{state.success}</p>}
@@ -30,5 +31,5 @@ export function SupportScreenshotRetry({ticket,ready}:{ticket:SupportTicket;read
  if(!ready || !withinRetryWindow) return <p className="muted">Screenshot retry requires configured uploads and a ticket created within the last 24 hours. The text ticket remains available.</p>;
  return <ActionForm action={submitSupport} submit="Retry screenshot upload"><input type="hidden" name="ticket_id" value={ticket.id}/>
  <input type="hidden" name="contact_name" value={ticket.contact_name}/><input type="hidden" name="contact_email" value={ticket.contact_email}/><input type="hidden" name="contact_phone" value={ticket.contact_phone}/><input type="hidden" name="facility_name" value={ticket.facility_name}/><input type="hidden" name="issue" value={ticket.issue}/>
- <label>Retry optional screenshot<input name="screenshot" type="file" required accept="image/jpeg,image/png,image/webp"/></label></ActionForm>;
+ <label>Retry optional screenshot (up to {IMAGE_UPLOAD_LIMIT_LABEL})<input name="screenshot" type="file" required onChange={event=>{event.currentTarget.setCustomValidity(imageUploadSizeError(event.currentTarget.files?.[0]?.size ?? 0));event.currentTarget.reportValidity();}} accept="image/jpeg,image/png,image/webp"/></label></ActionForm>;
 }

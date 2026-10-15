@@ -1,5 +1,9 @@
 # Hospital2Hospital context refresh
 
+## October 15 update: Vercel-safe image limits
+
+Listing photos, support screenshots/retries and profile headshots now share a 3 MB (3,000,000-byte) file limit in src/lib/upload-limits.mjs. Browser inputs reject oversized selections and server checks independently enforce it. Next.js Server Actions cap total requests at 4,000,000 bytes, leaving room below Vercel?s 4.5 MB limit. Existing 5 MiB Storage/SQL ceilings are unchanged; no migration or hosted bucket change is required. Photos still upload individually; sanitization, private access, six-photo maximum and 128 KiB saved avatars are unchanged. Tests cover exact boundary acceptance, one-byte-over rejection, sanitized decoding and maximum support-form multipart size. Hosted upload testing remains separate.
+
 ## October 14 update: welcome account cards
 
 Welcome-page Forgot password, Create account and Resend confirmation links now select their standard auth forms on /?welcome=forgot|register|resend, retaining the white background and full logo. Back-to-login and registration recovery links stay in the welcome flow. Only recognized card values are accepted; invalid values show login. AuthForm is remounted on card changes to reset entered fields and feedback. Existing /auth/* routes keep the normal shell for reauthentication; auth actions/email callbacks are unchanged. Signed-in root redirects strip the welcome-only parameter while preserving inventory queries. This is presentation only; public inventory access/RLS is unchanged. No migration or environment changes.

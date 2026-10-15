@@ -63,7 +63,7 @@ Keep email disabled until Resend verification and a tested worker schedule are r
 
 ## Work required before a complete production launch
 
-- Adapt the 5 MiB photo/screenshot/headshot upload path for Vercel's 4.5 MB function request limit, or consistently lower the application upload limit below that threshold with room for multipart overhead. Increasing Next.js bodySizeLimit alone does not bypass Vercel's limit. Preserve server-side image validation and private access controls.
+- Upload limits were adjusted October 15: listing photos, screenshots (including retries) and headshots accept at most 3 MB (3,000,000 bytes). All file inputs validate before submission; the server checks the same limit. Server Actions cap the complete multipart body at 4 MB (4,000,000 bytes), below Vercel's 4.5 MB ceiling. Files upload one at a time. Private Storage policies and full image validation are preserved. Verify uploads on Vercel after deploying.
 - Add and test a secured scheduled execution mechanism for `scripts/email-worker.mjs`. It already claims/sends/records queued jobs with retries, but deployment alone does not schedule it. A protected server endpoint invoked by Vercel Cron is one option; its service credentials must stay server-only. No cron endpoint/configuration is currently installed.
 - Choose an initial cadence such as every five minutes and monitor queue age/provider failures. Keep photo/support cleanup schedules separate and scoped to existing journal procedures.
 - Test at the temporary deployment URL before connecting public traffic. Validate account emails, login/recovery, approvals, listing mutations/uploads, saves, messages, boost review, support tickets and email job delivery. Confirm ordinary Google inbox delivery still works.

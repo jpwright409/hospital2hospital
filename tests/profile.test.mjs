@@ -1,4 +1,5 @@
 import {PGlite} from '@electric-sql/pglite';
+import {MAX_IMAGE_UPLOAD_BYTES} from '../src/lib/upload-limits.mjs';
 import {readFile,readdir} from 'node:fs/promises';
 import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
@@ -32,7 +33,7 @@ after(()=>db.close());
 test('headshots are decoded, square WebP and metadata-free; SVG/fake/damaged/oversized images fail',async()=>{
  const bytes=Buffer.from(image.split(',')[1],'base64');const meta=await sharp(bytes).metadata();assert.equal(meta.format,'webp');assert.equal(meta.width,256);assert.equal(meta.height,256);assert.ok(bytes.length<=131072);assert.equal(meta.exif,undefined);
  for(const format of ['jpeg','png','webp'])assert.match(await validateAvatar(await sharp({create:{width:30,height:50,channels:3,background:'#123456'}}).toFormat(format).toBuffer()),/^data:image\/webp;base64,/);
- await assert.rejects(validateAvatar(Buffer.from('<svg></svg>')));await assert.rejects(validateAvatar(Buffer.from('pretend image')));await assert.rejects(validateAvatar(Buffer.from([255,216,255,0])));await assert.rejects(validateAvatar(Buffer.alloc(5*1024*1024+1)));
+ await assert.rejects(validateAvatar(Buffer.from('<svg></svg>')));await assert.rejects(validateAvatar(Buffer.from('pretend image')));await assert.rejects(validateAvatar(Buffer.from([255,216,255,0])));await assert.rejects(validateAvatar(Buffer.alloc(MAX_IMAGE_UPLOAD_BYTES+1)));
 });
 test('profile edits are caller-only, transactional and cannot change membership, ownership or email',async()=>{
  await assert.rejects(as(owner,()=>db.query('update auth.users set email=$1 where id=$2',['forged@example.test',other])),{code:'42501'});

@@ -1,4 +1,5 @@
 "use server";
+import { IMAGE_UPLOAD_LIMIT_LABEL } from "@/lib/upload-limits.mjs";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/server";
 import { createPhotoAdmin } from "@/lib/supabase/photo-admin";
@@ -15,7 +16,7 @@ export async function uploadPhoto(_state:InventoryState,form:FormData):Promise<I
     if(permission.error) throw permission.error;
     if(!permission.data) return {error:"Photo changes require active owner/editor membership in this listing’s approved facility."};
     const file=form.get("photo");
-    if(!(file instanceof File) || !file.size || file.size>MAX_PHOTO_BYTES) return {error:"Choose one JPEG, PNG, or WebP file up to 5 MB."};
+    if(!(file instanceof File) || !file.size || file.size>MAX_PHOTO_BYTES) return {error:`Choose one JPEG, PNG, or WebP file up to ${IMAGE_UPLOAD_LIMIT_LABEL}.`};
     const admin=createPhotoAdmin();
     const image=await validatePhoto(new Uint8Array(await file.arrayBuffer()));
     await uploadValidatedPhoto(supabase,admin,id,image);

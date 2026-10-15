@@ -1,11 +1,12 @@
 import sharp from "sharp";
-export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+import { MAX_IMAGE_UPLOAD_BYTES, IMAGE_UPLOAD_LIMIT_LABEL } from "../upload-limits.mjs";
+export const MAX_PHOTO_BYTES = MAX_IMAGE_UPLOAD_BYTES;
 export const PHOTO_BUCKET = "listing-photos";
 export const PHOTO_URL_SECONDS = 60;
 // No filenames or client MIME claims are trusted. Full decoding strips EXIF,
 // arbitrary trailing data and metadata; Storage receives a fresh WebP encoding.
 export async function validatePhoto(input: Uint8Array) {
-  if (!input.length || input.length > MAX_PHOTO_BYTES) throw new Error("Choose a JPEG, PNG, or WebP image up to 5 MB.");
+  if (!input.length || input.length > MAX_PHOTO_BYTES) throw new Error(`Choose a JPEG, PNG, or WebP image up to ${IMAGE_UPLOAD_LIMIT_LABEL}.`);
   const buffer = Buffer.from(input);
   const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
   const isPng = buffer.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));

@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
+import { MAX_SERVER_ACTION_BYTES } from "./src/lib/upload-limits.mjs";
 
 const nextConfig: NextConfig = {
-  // One 5 MB image plus multipart overhead; six-photo limits are enforced in SQL.
-  experimental: { serverActions: { bodySizeLimit: "6mb" } },
+  // One 3 MB image plus form fields; total stays below Vercel's 4.5 MB limit.
+  experimental: { serverActions: { bodySizeLimit: MAX_SERVER_ACTION_BYTES } },
 };
 
 export default nextConfig;

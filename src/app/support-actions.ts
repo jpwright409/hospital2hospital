@@ -1,4 +1,5 @@
 "use server";
+import { IMAGE_UPLOAD_LIMIT_LABEL } from "@/lib/upload-limits.mjs";
 import {revalidatePath} from "next/cache";
 import {requireUser,requirePlatformAdministrator,serviceError} from "@/lib/auth/server";
 import {validatePhoto,MAX_PHOTO_BYTES} from "@/lib/photos/image";
@@ -9,7 +10,7 @@ export async function submitSupport(_state:SupportState,form:FormData):Promise<S
  const {supabase,user}=await requireUser();let ticketId:string|undefined;
  try {
   const input=form.get("screenshot");const file=input instanceof File && input.size>0 ? input : null;
-  if(file && file.size>MAX_PHOTO_BYTES) return {error:"Choose a JPEG, PNG or WebP screenshot up to 5 MB."};
+  if(file && file.size>MAX_PHOTO_BYTES) return {error:`Choose a JPEG, PNG or WebP screenshot up to ${IMAGE_UPLOAD_LIMIT_LABEL}.`};
   // Validation/config failures precede ticket creation; text-only tickets need no secret.
   const admin=file ? createSupportAdmin() : null;
   const image=file ? await validatePhoto(new Uint8Array(await file.arrayBuffer())) : null;

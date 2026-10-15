@@ -16,7 +16,7 @@ test('actual JPEG/PNG/WebP decode and sanitized re-encoding reject SVG, fake MIM
   await assert.rejects(validatePhoto(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>')),/Only actual/);
   await assert.rejects(validatePhoto(Buffer.from('not an image')),/Only actual/);
   await assert.rejects(validatePhoto(Buffer.from([255,216,255,1,2,3])),/decoded safely/);
-  await assert.rejects(validatePhoto(Buffer.alloc(MAX_PHOTO_BYTES+1)),/5 MB/);
+  await assert.rejects(validatePhoto(Buffer.alloc(MAX_PHOTO_BYTES+1)),/3 MB/);
 });
 function fakeClients({uploadError,finalizeError,cleanupError,claimPath='facility/listing/photo.webp'}={}) {
   const calls=[];

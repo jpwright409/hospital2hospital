@@ -1,4 +1,5 @@
 "use client";
+import { imageUploadSizeError, IMAGE_UPLOAD_LIMIT_LABEL } from "@/lib/upload-limits.mjs";
 import Link from "next/link";
 import Image from "next/image";
 import compactLogo from "../../public/brand/Small Logo.png";
@@ -34,12 +35,14 @@ function ProfileEditor({ profile, close, busy, saved }: { profile: Profile; clos
       <label>Profile avatar / headshot<input ref={fileInput} type="file" name="avatar" accept="image/jpeg,image/png,image/webp" onChange={e => {
         if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
         const selected = e.target.files?.[0];
+        e.currentTarget.setCustomValidity(imageUploadSizeError(selected?.size ?? 0));
+        if (!e.currentTarget.reportValidity()) { previewUrl.current = null; setPreview(null); setFile(false); return; }
         const url = selected ? URL.createObjectURL(selected) : null;
         previewUrl.current = url; setPreview(url); setFile(!!selected); setRemove(false);
-      }}/><small>JPEG, PNG or WebP, up to 5 MB. Saved as a cropped 256px square.</small></label>
+      }}/><small>JPEG, PNG or WebP, up to {IMAGE_UPLOAD_LIMIT_LABEL}. Saved as a cropped 256px square.</small></label>
       {profile.avatar && <label className="profile-remove"><input type="checkbox" name="remove_avatar" value="yes" checked={remove} onChange={e => {
         setRemove(e.target.checked);
-        if (e.target.checked) { if (fileInput.current) fileInput.current.value = ""; setFile(false); setPreview(null); if (previewUrl.current) URL.revokeObjectURL(previewUrl.current); previewUrl.current = null; }
+        if (e.target.checked) { if (fileInput.current) { fileInput.current.value = ""; fileInput.current.setCustomValidity(""); } setFile(false); setPreview(null); if (previewUrl.current) URL.revokeObjectURL(previewUrl.current); previewUrl.current = null; }
       }}/>Remove current headshot</label>}
     </fieldset>
     {state.error && <p className="error" role="alert">{state.error}</p>}

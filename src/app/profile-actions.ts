@@ -1,4 +1,5 @@
 "use server";
+import { imageUploadSizeError } from "@/lib/upload-limits.mjs";
 import { revalidatePath } from "next/cache";
 import { authenticatedClient, serviceError } from "@/lib/auth/server";
 import { getAppMode } from "@/lib/app-mode";
@@ -18,7 +19,8 @@ export async function saveProfile(_previous: ActionState, form: FormData): Promi
     if (remove && hasFile) return { error: "Choose a replacement headshot or remove the current one." };
     let avatar: string | null = null;
     if (hasFile) {
-      if (file.size > 5 * 1024 * 1024) return { error: "Choose a JPEG, PNG, or WebP up to 5 MB." };
+      const sizeError = imageUploadSizeError(file.size);
+      if (sizeError) return { error: sizeError };
       try { avatar = await validateAvatar(new Uint8Array(await file.arrayBuffer())); }
       catch (error) { return { error: (error as Error).message }; }
     }
