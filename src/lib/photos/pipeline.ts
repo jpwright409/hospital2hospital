@@ -10,10 +10,13 @@ export async function cleanupPhoto(admin: SupabaseClient,id: string,staleOnly = 
   const finish = await admin.rpc("finish_photo_cleanup",{p_photo_id:id});
   if (finish.error) throw finish.error;
 }
-export async function uploadValidatedPhoto(client: SupabaseClient,admin: SupabaseClient,listingId: string,image: {data: Uint8Array; width:number;height:number;size:number}) {
-  const reserve = await client.rpc("reserve_listing_photo",{p_listing_id:listingId});
+export async function uploadValidatedPhoto(client: SupabaseClient,admin: SupabaseClient,listingId: string,image: {data: Uint8Array; width:number;height:number;size:number},requestId?:string) {
+  const reserve = requestId
+    ? await client.rpc("reserve_listing_photo_once",{p_listing_id:listingId,p_request_id:requestId})
+    : await client.rpc("reserve_listing_photo",{p_listing_id:listingId});
   if(reserve.error) throw reserve.error;
-  const photo = reserve.data as {id:string;object_path:string};
+  const photo = reserve.data as {id:string;object_path:string;state?:string};
+  if(photo.state==='ready') return photo.id;
   try {
     const uploaded = await client.storage.from(PHOTO_BUCKET).upload(photo.object_path,image.data,{contentType:"image/webp",cacheControl:"60",upsert:false});
     if(uploaded.error) throw uploaded.error;

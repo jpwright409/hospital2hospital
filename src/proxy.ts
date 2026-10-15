@@ -5,7 +5,7 @@ import { getAppMode, getSupabaseConfig } from "@/lib/app-mode";
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const accountOnly = path.startsWith("/account") || path.startsWith("/admin") || path === "/auth/update-password";
-  const protectedRoute = accountOnly || path.startsWith("/inbox") || path.startsWith("/notifications") || path === "/watchlist" || path === "/refer" || path === "/saved" || path === "/dashboard" || path === "/listings/new" || /^\/listings\/[^/]+\/edit$/.test(path);
+  const protectedRoute = accountOnly || /^\/listings\/[^/]+\/photos$/.test(path) || path.startsWith("/inbox") || path.startsWith("/notifications") || path === "/watchlist" || path === "/refer" || path === "/saved" || path === "/dashboard" || path === "/listings/new" || /^\/listings\/[^/]+\/edit$/.test(path);
   if (getAppMode() === "demo") {
     return accountOnly ? NextResponse.redirect(new URL("/auth/login", request.url)) : NextResponse.next();
   }
@@ -29,7 +29,9 @@ export async function proxy(request: NextRequest) {
       throw error;
     }
     if (protectedRoute && !data?.claims) {
-      const redirect = NextResponse.redirect(new URL("/auth/login", request.url));
+      const login = new URL("/auth/login", request.url);
+      if (/^\/listings\/[^/]+\/photos$/.test(path)) login.searchParams.set("next",path);
+      const redirect = NextResponse.redirect(login);
       response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
       redirect.headers.set("Cache-Control", "private, no-store");
       return redirect;
@@ -45,5 +47,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/marketplace", "/saved", "/inbox/:path*", "/notifications/:path*", "/watchlist", "/refer", "/help", "/listings/:id", "/auth/:path*", "/account/:path*", "/admin/:path*", "/dashboard", "/listings/new", "/listings/:id/edit"],
+  matcher: ["/", "/marketplace", "/saved", "/inbox/:path*", "/notifications/:path*", "/watchlist", "/refer", "/help", "/listings/:id", "/auth/:path*", "/account/:path*", "/admin/:path*", "/dashboard", "/listings/new", "/listings/:id/edit", "/listings/:id/photos"],
 };

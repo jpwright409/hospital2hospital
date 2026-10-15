@@ -13,7 +13,8 @@ export async function saveInventory(_state: InventoryState,form: FormData): Prom
   let id = field(form,"listing_id");
   try {
     if (!account.active || !account.capabilities.canPublish) return {error:"Select an approved facility with an active owner or inventory editor membership in My account."};
-    const inventory = validateInventory(form); const {supabase} = await requireUser();
+    const inventory = validateInventory(form);
+    if (!id) inventory.status = "draft"; const {supabase} = await requireUser();
     if (id) {
       // The database authorizes the listing's actual facility, never a client field.
       const {data:listing,error:readError} = await supabase.from("listings").select("facility_id").eq("id",id).maybeSingle();
@@ -24,11 +25,11 @@ export async function saveInventory(_state: InventoryState,form: FormData): Prom
     } else {
       const productId = field(form,"product_id");
       const product = productId ? {id:productId} : {manufacturer:field(form,"manufacturer"),catalog_number:field(form,"catalog_number"),name:field(form,"name"),category:field(form,"category"),description:field(form,"description"),product_kind:field(form,"inventory_kind")};
-      const result = await supabase.rpc("create_inventory_listing",{p_facility_id:account.active.id,p_product:product,p_inventory:inventory});
+      const result = await supabase.rpc("create_inventory_draft",{p_request_id:field(form,"draft_request_id"),p_facility_id:account.active.id,p_product:product,p_inventory:inventory});
       if (result.error) throw result.error; id = result.data;
     }
   } catch (error) { return {error: error instanceof Error ? error.message : inventoryError(error)}; }
-  refresh(id); redirect(`/listings/${id}`);
+  refresh(id); redirect(`/listings/${id}/edit`);
 }
 export async function changeInventoryStatus(_state: InventoryState,form: FormData): Promise<InventoryState> {
   const {supabase} = await requireUser(); const id = field(form,"listing_id"); const status = field(form,"status");

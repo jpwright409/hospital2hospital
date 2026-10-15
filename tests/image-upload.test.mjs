@@ -8,6 +8,16 @@ let source=await readFile(new URL('../src/lib/photos/pipeline.ts',import.meta.ur
 source=source.replace('"./image"',JSON.stringify(new URL('../src/lib/photos/image.ts',import.meta.url).href));
 const output=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
 const {uploadValidatedPhoto,cleanupPhoto}=await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+
+test('a completed upload retry returns its photo without re-uploading; pending retries never trigger cleanup',async()=>{
+  let storageTouched=false;
+  const admin={get storage(){storageTouched=true;throw new Error('must not delete');}};
+  const completed={rpc:async(name,args)=>{assert.equal(name,'reserve_listing_photo_once');assert.equal(args.p_request_id,'submission');return {data:{id:'photo',object_path:'exact/path.webp',state:'ready'}};}};
+  assert.equal(await uploadValidatedPhoto(completed,admin,'listing',{data:Buffer.from('validated'),width:1,height:1,size:9},'submission'),'photo');
+  const pending={rpc:async()=>({error:new Error('Upload is unfinished')})};
+  await assert.rejects(uploadValidatedPhoto(pending,admin,'listing',{data:Buffer.from('validated'),width:1,height:1,size:9},'submission'),/unfinished/);
+  assert.equal(storageTouched,false);
+});
 test('actual JPEG/PNG/WebP decode and sanitized re-encoding reject SVG, fake MIME, damaged and oversized input',async()=>{
   for(const format of ['jpeg','png','webp']) {
     const input=await sharp({create:{width:40,height:30,channels:3,background:'#118899'}}).toFormat(format).toBuffer();

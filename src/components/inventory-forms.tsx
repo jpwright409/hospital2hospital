@@ -9,13 +9,14 @@ export function SavedAction({id,saved}: {id: string; saved: boolean}) {
   </ActionForm>;
 }
 export function StatusAction({listing,status}: {listing: InventoryListing; status: string}) {
-  return <ActionForm action={changeInventoryStatus} submit={status === "active" ? "Reactivate" : status === "sold" ? "Mark sold" : "Deactivate"} className="compact-action">
+  return <ActionForm action={changeInventoryStatus} submit={status === "active" ? (listing.status === "draft" ? "Publish listing" : "Reactivate") : status === "sold" ? "Mark sold" : "Deactivate"} className="compact-action">
     <input type="hidden" name="listing_id" value={listing.id}/><input type="hidden" name="revision" value={listing.revision}/><input type="hidden" name="status" value={status}/>
   </ActionForm>;
 }
-export function InventoryEditor({listing,product,manufacturers=[]}: {listing?: InventoryListing; product?: CatalogProduct; manufacturers?:{id:string;name:string}[]}) {
+export function InventoryEditor({listing,product,manufacturers=[],requestId}: {listing?: InventoryListing; product?: CatalogProduct; manufacturers?:{id:string;name:string}[];requestId?:string}) {
   const reference = listing ?? product;
-  return <ActionForm action={saveInventory} submit={listing ? "Save changes" : "Create listing"}>
+  return <ActionForm action={saveInventory} submit={listing ? "Save changes" : "Save private draft and add photos"}>
+    {!listing && <input type="hidden" name="draft_request_id" value={requestId}/> }
     {listing && <><input type="hidden" name="listing_id" value={listing.id}/><input type="hidden" name="revision" value={listing.revision}/></>}
     {reference && <input type="hidden" name="product_id" value={listing?.product_id ?? product?.id}/>}
     <section className="panel form-panel"><h2>Identify the product</h2>
@@ -38,9 +39,9 @@ export function InventoryEditor({listing,product,manufacturers=[]}: {listing?: I
       <label>Sterile status<select name="sterile" defaultValue={listing?.sterile ? "yes" : "no"}><option value="yes">Sterile</option><option value="no">Non-sterile</option></select></label>
       <label>Use type<select name="single_use" defaultValue={listing?.single_use === false ? "no" : "yes"}><option value="yes">Single-use</option><option value="no">Reusable</option></select></label>
       <label>Packaging<input name="packaging" maxLength={200} defaultValue={listing?.packaging}/></label>
-      <label>Status<select name="status" defaultValue={listing?.status ?? "active"}><option value="active">Active · public inventory</option><option value="inactive">Inactive · facility only</option>{listing && <option value="sold">Sold · facility only</option>}</select></label>
+      <label>Status<select name="status" defaultValue={listing?.status ?? "draft"}><option value="draft">Draft - private, not published</option><option disabled={!listing} value="active">Active · public inventory</option><option disabled={!listing} value="inactive">Inactive · facility only</option>{listing && <option value="sold">Sold · facility only</option>}</select></label>
       <label className="full">Seller notes<textarea name="notes" maxLength={2000} defaultValue={listing?.notes}/><small>Public listing text: do not include personal contact information.</small></label>
-    </div></section><p className="notice">Save your listing, then add photos from its edit page. Verify actual stock before publishing or reactivating.</p>
+    </div></section><p className="notice">New listings are saved as private drafts first. Add photos on the next step, then choose Active and Save changes to publish. Save any edits before using the separate Publish listing button. Verify actual stock before publishing.</p>
   </ActionForm>;
 }
 

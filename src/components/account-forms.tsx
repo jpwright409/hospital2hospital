@@ -17,13 +17,14 @@ export function ActionForm({ action, children, submit, className = "" }: {
   </form>;
 }
 
-export function AuthForm({ kind, welcome = false }: { kind: "register" | "login" | "forgot" | "update" | "resend"; welcome?: boolean }) {
+export function AuthForm({ kind, welcome = false, returnTo }: { kind: "register" | "login" | "forgot" | "update" | "resend"; welcome?: boolean; returnTo?:string }) {
   const password = kind !== "forgot" && kind !== "resend";
   const loginPath = welcome ? "/" : "/auth/login";
   const forgotPath = welcome ? "/?welcome=forgot" : "/auth/forgot-password";
   return <>
     <ActionForm action={{ register, login, forgot: forgotPassword, update: updatePassword, resend: resendConfirmation }[kind]}
       submit={{ register: "Create account", login: "Log in", forgot: "Request recovery link", update: "Update password", resend: "Request confirmation email" }[kind]}>
+      {kind === "login" && returnTo && <input type="hidden" name="next" value={returnTo}/> }
       {kind === "register" && <label>Your name<input name="display_name" required minLength={2} maxLength={120} autoComplete="name"/></label>}
       {kind !== "update" && <label>Work email<input name="email" type="email" required maxLength={254} autoComplete="email"/></label>}
       {password && <label>{kind === "update" ? "New password" : "Password"}<input name="password" type="password" required

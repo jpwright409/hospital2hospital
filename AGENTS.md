@@ -85,3 +85,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Public featured reads use the safe inventory projection with active/nondeleted/approved checks in one SQL snapshot. No private stock or fictional fallback. Connected root shows a standalone welcome/login page to signed-out visitors and redirects confirmed signed-in users to Marketplace; successful login still lands on Marketplace. Demo root still lands on Marketplace. Preserve password recovery and onboarding destinations. Filter popup drafts must not change results until Apply; keep applied URL state and reset pagination.
 
 - Upload file limits and Server Action request limits live in src/lib/upload-limits.mjs: 3,000,000 bytes per file, 4,000,000 bytes per request, leaving headroom below Vercel's 4.5 MB ceiling. Keep all browser inputs (including screenshot retries), server checks and labels consistent. Existing 5 MiB Storage/SQL ceilings remain unchanged; the app is stricter.
+
+## Authenticated phone photos and drafts
+
+- Migration 015 adds draft inventory and guarded idempotent draft/photo submission operations. New create forms save private drafts first; publication uses the existing approved-manager/revision checks. No automatic draft purge.
+- /listings/[id]/photos requires a confirmed eligible photo manager of the actual facility, independently of active selection. Its URL/QR is a locator, not a bearer permission. Only allowlisted exact UUID photo-page paths may follow login. No administrator override.
+- Phone/photo inputs prepare supported still images locally (20 MB original / 20 MP max, 2000px output) and send <=3 MB. Server sanitization remains authoritative. Never import sharp or privileged clients into browser preparation.
+- Poll only the private no-store photo API every 20 seconds while visible; preserve unsaved inventory fields. Photo actions do not revalidate the edit form. Preserve same-photo submission IDs on retry; never delete an in-flight upload on duplicate reservation errors.
+- See the authenticated camera/phone section of SUPABASE_SETUP.md for migration order, retained-draft cleanup and real two-device tests.

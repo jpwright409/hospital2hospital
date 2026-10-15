@@ -1,5 +1,6 @@
 "use server";
 
+import { photoReturnPath } from "@/lib/auth/photo-return.mjs";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -39,7 +40,7 @@ export async function login(_previous: ActionState, form: FormData): Promise<Act
     if (error) return { error: serviceError(error) };
   } catch (error) { return { error: serviceError(error) }; }
   revalidatePath("/", "layout");
-  redirect("/marketplace");
+  redirect(photoReturnPath(value(form,"next")));
 }
 
 export async function logout(_previous: ActionState, _form: FormData): Promise<ActionState> {

@@ -5,7 +5,7 @@ export type InventoryListing = CatalogProduct & {
   quantity: number; quantity_unit: string; units_per_package: number; price_usd: number;
   inventory_kind: string; price_negotiable: boolean; procedure_type: string; deleted_at: string | null;
   currency: "USD"; condition: string; expiration: string | null; sterile: boolean; single_use: boolean;
-  packaging: string; notes: string; status: "active" | "inactive" | "sold";
+  packaging: string; notes: string; status: "draft" | "active" | "inactive" | "sold";
   revision: number; created_at: string; updated_at: string;
   photos?: import("@/lib/photos/server").ListingPhoto[];
 };
@@ -23,7 +23,7 @@ export function parseInventoryQuery(params: SearchParams): InventoryQuery {
     sort: ["newest","price_low","price_high"].includes(sort) ? sort : "newest",
     page: Number.isSafeInteger(page) && page > 0 && page <= 100000 ? page : 1,
     seller_facility: /^[0-9a-f-]{36}$/i.test(value("seller_facility",36)) ? value("seller_facility",36) : "", procedure: procedures.includes(value("procedure")) ? value("procedure") : "", kind: ["capital","disposable"].includes(value("kind")) ? value("kind") : "",
-    status: ["active","inactive","sold"].includes(value("status")) ? value("status") : "" };
+    status: ["draft","active","inactive","sold"].includes(value("status")) ? value("status") : "" };
 }
 export function inventoryUrl(path: string, query: InventoryQuery, page: number) {
   const params = new URLSearchParams();
@@ -37,7 +37,7 @@ export function validateInventory(form: FormData) {
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100000000) throw new Error("Quantity must be a whole number from 1 to 100,000,000.");
   if (!quantityUnits.includes(unit) || !Number.isInteger(units) || units < 1 || units > 1000000 || (unit === "each" && units !== 1)) throw new Error("Choose a quantity unit and whole package size; each must contain exactly 1 item.");
   if (!/^\d{1,10}(\.\d{1,2})?$/.test(price) || Number(price) > 9999999999.99) throw new Error("Enter a USD price with at most two decimal places, including 0 for free stock.");
-  if (!conditions.includes(text("condition")) || !["active","inactive","sold"].includes(status)) throw new Error("Choose a valid condition and listing status.");
+  if (!conditions.includes(text("condition")) || !["draft","active","inactive","sold"].includes(status)) throw new Error("Choose a valid condition and listing status.");
   const expiration = text("expiration");
   if (expiration && (!/^\d{4}-\d{2}-\d{2}$/.test(expiration) || Number.isNaN(Date.parse(expiration)) || new Date(expiration).toISOString().slice(0,10) !== expiration)) throw new Error("Enter a valid expiration date or leave it blank.");
   if (text("packaging").length > 200 || text("notes").length > 2000) throw new Error("Packaging is limited to 200 characters and notes to 2,000.");

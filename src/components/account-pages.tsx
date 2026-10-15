@@ -19,7 +19,7 @@ export function WelcomeLogin({ kind = "login" }: { kind?: "login" | "register" |
   </div>;
 }
 
-export function AuthenticationPage({ kind, notice }: { kind: "login" | "register" | "forgot" | "update" | "resend"; notice?: string }) {
+export function AuthenticationPage({ kind, notice, returnTo }: { kind: "login" | "register" | "forgot" | "update" | "resend"; notice?: string; returnTo?:string }) {
   const titles = { login: "Welcome back", register: "Create your facility account", forgot: "Recover your account", update: "Set a new password", resend: "Confirm your email" };
   const descriptions = {
     login: "Log in to manage your facility and approval status.",
@@ -33,7 +33,7 @@ export function AuthenticationPage({ kind, notice }: { kind: "login" | "register
     {getAppMode() === "demo" ? <div className="panel"><h2>Account features are not configured</h2><p>This application is explicitly in demo mode. Configure connected mode using SUPABASE_SETUP.md to test accounts.</p><Link className="button primary" href="/marketplace">Browse demo inventory</Link></div>
       : <div className="panel">
         {notice && <p className="notice" role="status">{notice}</p>}
-        <AuthForm kind={kind}/>
+        <AuthForm kind={kind} returnTo={returnTo}/>
       </div>}
     <p className="muted account-disclaimer">Approved facility owners and inventory editors can publish actual inventory. Eligible members can use private facility conversations.</p>
   </div>;
