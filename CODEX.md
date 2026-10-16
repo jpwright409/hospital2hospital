@@ -1,5 +1,12 @@
 # Hospital2Hospital context refresh
 
+## October 15 update: conversation layout (release authorized)
+
+The user authorized publishing/deploying this presentation change. ConversationListingActions in conversations.tsx places the listing status 12px lower with a matching 34px View Listing link alongside it, targeting the conversation listing_id. Existing listing-page authorization remains authoritative. Empty history pagination is no longer rendered; real history navigation remains with reduced spacing. ReplyForm uses a 20px top gap, a centered plain-text/4000-character/no-attachments disclaimer directly below its textarea (aria-describedby), and a smaller 36px Send reply button. Sending, idempotency, permissions and message reads were not changed. No migration/environment changes.
+
+All 122 automated tests, lint without warnings and production build passed. Local Chrome checked desktop/phone sizing, status/link alignment and destination, reply spacing, disclaimer order/centering, button size and no horizontal overflow. Local fixtures only; no real messages sent. Temporary preview route removed before build. Verify the latest main commit and production Vercel status when resuming. Previous listing-detail release f2792f9 deployed successfully.
+
+
 ## October 15 update: compact listing detail (release authorized)
 
 Connected listing details now use src/components/listing-detail.tsx for presentation. Photos are 320px high on desktop (280/240px on small screens), product title is 28px desktop/23px phone, and asking price is 25px desktop/23px phone with a quieter unit/USD label. Facility name/location stack on a shared left edge. Product details use semantic labeled rows, readable capital/disposable labels and Not specified for unclassified stock; redundant descriptions equal to the product name are hidden. Stored inventory classifications/sterile/use flags were not changed or inferred. Seller notes preserve line breaks. Mobile order is photo, summary/actions, then details.
