@@ -103,3 +103,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Seller-proposed references remain pending until confirmed platform administrators approve at /admin/products. Approval resolves normalized manufacturer/catalog identity without overwriting shared records or creating stock. Migration 016 also closes legacy create-listing/create-draft product-creation bypasses. Trusted catalog imports remain operator-only.
 - All new ordinary operations use publishable clients and live approved owner/editor permissions, including draft reads and direct RPCs. No platform administrator inventory override. Existing private photos, six-photo limits, sanitation, authenticated QR access and cleanup remain authoritative.
 - Run npm test, npm run lint and npm run build; distinguish PGlite/mock-browser coverage from hosted PostgREST/Storage/device tests. Apply 016 only with explicit authorization; no new keys or bucket configuration.
+
+## Facilitator Dashboard
+
+- /admin and its four section URLs share an administrator-only layout and navigation tabs. Keep independent page/action/RPC checks; a persisted layout is never the only authorization boundary. Existing review forms and revalidation paths remain in place.
+- Account and Find expose one Facilitator Dashboard link only for confirmed platform administrators. Facility ownership/administrator membership is insufficient. /api/facilitator-access returns only caller visibility using verified Auth plus the live database helper; private/no-store, Cookie variance, no privileged client or metadata-based roles. Hide links on unavailable/denied checks; never rely on hiding for security.

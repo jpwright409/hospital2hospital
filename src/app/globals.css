@@ -104,3 +104,17 @@
 .open-conversation-button{min-height:36px;padding:8px 14px;font-size:11px}
 .message-facility-switcher select{height:42px}
 .message-facility-switcher>.button{height:42px;min-height:42px;padding:8px 14px;font-size:11px}
+
+/* Shared platform administration workspace. */
+.facilitator-heading{padding-top:36px}
+.facilitator-heading h1{font-size:30px;letter-spacing:-.6px;margin:16px 0 8px}
+.facilitator-heading>p{color:var(--muted);font-size:13px}
+.facilitator-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;border-bottom:1px solid var(--line);margin-top:24px;padding-bottom:8px}
+.facilitator-tabs a{display:flex;align-items:center;justify-content:center;min-height:48px;padding:12px;text-align:center;font-size:13px;font-weight:600;border-radius:6px;color:var(--muted)}
+.facilitator-tabs a:hover{background:var(--soft);color:var(--primary-hover)}
+.facilitator-tabs a[aria-current=page]{background:var(--mint);color:var(--primary-hover);box-shadow:inset 0 -3px var(--primary)}
+.facilitator-dashboard>.page-section{max-width:none;padding-top:24px}
+.facilitator-dashboard .facilitator-section-title{font-size:23px;letter-spacing:-.3px;margin-bottom:10px}
+.facilitator-dashboard .approval-tabs{flex-wrap:wrap}
+.facilitator-loading{padding-top:24px;padding-bottom:40px}
+@media(max-width:600px){.facilitator-heading{padding-top:24px}.facilitator-heading h1{font-size:26px}.facilitator-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.facilitator-tabs a{font-size:12px}}

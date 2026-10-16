@@ -1,5 +1,14 @@
 # Hospital2Hospital context refresh
 
+## October 15 update: Facilitator Dashboard (release authorized)
+
+User authorized implementation and deployment. /admin redirects to /admin/facilities and its shared server-authorized layout provides four navigation tabs: Facility approvals, Product approvals, Featured listing review, Support tickets. Existing /admin/{section} URLs, forms, filters, pagination, server checks, RLS and revalidation paths remain valid. Each page and mutation keeps its independent authorization because layouts persist during client navigation. This feature uses the existing private platform administrator mechanism; facility owner/administrator membership alone does not qualify.
+
+My account replaces the four old admin links with one Facilitator Dashboard link. FindMenu shows the same link only after /api/facilitator-access verifies confirmed Auth and the live is_platform_administrator RPC. Responses are private/no-store and vary by Cookie; no user IDs/role metadata or secret clients are accepted. Navigation/focus/visibility rechecks, aborts stale requests, hides on errors; UI visibility never grants access. Existing account authorization supplies the account-page link.
+
+126 automated tests passed, including four new tests of the actual access route with mocked Auth/permission responses. Lint and production build passed without warnings. Local Chrome verified all four active tabs, desktop/mobile layout, admin-link visibility and hiding for ordinary/revoked/error cases using mocked permission responses only. Temporary preview route removed. No hosted admin writes, new migrations or environment settings. Verify main and Vercel deployment status when resuming. Prior messaging-controls release 9207945 deployed successfully.
+
+
 ## October 15 follow-up: compact messaging controls (release authorized)
 
 Open facility conversation is now labeled Open conversation with a smaller 36px button. Reply disclaimer top gap and Send reply top margin are reduced to 4px, preserving the centered disclaimer beneath the textarea. Messaging facility dropdown and Switch facility button both have explicit 42px height; button text/padding are smaller. Browser checks passed at desktop/phone widths with no horizontal overflow, using local fixtures and no live mutations. All 122 tests, lint and production build passed. Temporary preview route removed before build. User authorized deployment; verify latest main/Vercel production status. No migration or environment changes. Previous conversation-layout release 02d0a32 deployed successfully.

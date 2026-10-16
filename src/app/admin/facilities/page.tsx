@@ -9,8 +9,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
   const { data, error } = await supabase.from("facilities").select("id,name,city,state,facility_type,status,owner_user_id,review_reason,created_at")
     .eq("status", status).order("created_at", { ascending: false }).limit(100);
   if (error) throw new Error(serviceError(error));
-  return <div className="container page-section"><Link className="text-link" href="/account">← Account workspace</Link>
-    <div className="page-heading"><span className="eyebrow">PLATFORM ADMINISTRATION</span><h1>Facility approvals</h1><p>Review the newest 100 {status} facilities. Every decision is recorded in the private approval audit.</p></div>
+  return <div className="container page-section">
+    <div className="page-heading"><h2 className="facilitator-section-title">Facility approvals</h2><p>Review the newest 100 {status} facilities. Every decision is recorded in the private approval audit.</p></div>
     <nav className="approval-tabs" aria-label="Facility status filters">{["pending", "approved", "rejected", "suspended"].map(s => <Link className={`button ${s === status ? "primary" : "secondary"}`} href={`/admin/facilities?status=${s}`} key={s}>{s}</Link>)}</nav>
     <div className="account-grid">{(data as Facility[]).map(f => <section className="panel" key={f.id}><h2>{f.name}</h2><p>{f.city}, {f.state} · {f.facility_type}</p>
       <span className={`badge status-${f.status}`}>{f.status}</span><p className="muted">Owner account ID: {f.owner_user_id}</p>
