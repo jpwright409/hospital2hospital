@@ -23,7 +23,7 @@ export async function ContactSeller({listing}: {listing:InventoryListing}) {
   if(account.active.id===listing.facility_id) return <p className="notice">You cannot inquire about your own facility’s listing.</p>;
   const {data:existing,error}=await (await createClient()).from("conversations").select("id").eq("listing_id",listing.id).eq("buyer_facility_id",account.active.id).maybeSingle();
   if(error) throw new Error(serviceError(error));
-  if(existing) return <><BusinessContact listingId={listing.id} buyerId={account.active.id}/><div className="notice"><p>Your facility already has a shared conversation about this listing. Review your colleagues&apos; messages before replying.</p><Link className="button primary" href={`/inbox/${existing.id}`}>Open facility conversation</Link></div></>;
+  if(existing) return <><BusinessContact listingId={listing.id} buyerId={account.active.id}/><div className="notice"><p>Your facility already has a shared conversation about this listing. Review your colleagues&apos; messages before replying.</p><Link className="button primary open-conversation-button" href={`/inbox/${existing.id}`}>Open conversation</Link></div></>;
   return <><BusinessContact listingId={listing.id} buyerId={account.active.id}/><ContactForm listingId={listing.id} requestId={randomUUID()} facilityName={account.active.name} facilityId={account.active.id}/></>;
 }
 const demoNotice=<div className="container page-section"><h1>Facility inbox</h1><p className="notice">Private conversations require connected mode. Demo inquiries remain browser-local and are never delivered.</p><Link href="/dashboard">Back to dashboard</Link></div>;

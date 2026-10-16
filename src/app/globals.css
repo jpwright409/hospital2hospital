@@ -98,5 +98,9 @@
 .conversation-listing-actions .badge,.conversation-listing-actions .button{height:34px;min-height:34px;padding:7px 11px;font-size:11px;line-height:1.5}
 .conversation-container .message-pagination{margin:12px 0;padding:4px 0}
 .conversation-container .reply-form{margin-top:20px}
-.reply-form .reply-format-note{text-align:center;font-size:11px;line-height:1.6;margin:8px 0 0}
-.reply-form>.button{min-height:36px;padding:8px 15px;font-size:11px;margin-top:14px}
+.reply-form .reply-format-note{text-align:center;font-size:11px;line-height:1.6;margin:4px 0 0}
+.reply-form>.button{min-height:36px;padding:8px 15px;font-size:11px;margin-top:4px}
+
+.open-conversation-button{min-height:36px;padding:8px 14px;font-size:11px}
+.message-facility-switcher select{height:42px}
+.message-facility-switcher>.button{height:42px;min-height:42px;padding:8px 14px;font-size:11px}

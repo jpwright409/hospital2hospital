@@ -1,5 +1,10 @@
 # Hospital2Hospital context refresh
 
+## October 15 follow-up: compact messaging controls (release authorized)
+
+Open facility conversation is now labeled Open conversation with a smaller 36px button. Reply disclaimer top gap and Send reply top margin are reduced to 4px, preserving the centered disclaimer beneath the textarea. Messaging facility dropdown and Switch facility button both have explicit 42px height; button text/padding are smaller. Browser checks passed at desktop/phone widths with no horizontal overflow, using local fixtures and no live mutations. All 122 tests, lint and production build passed. Temporary preview route removed before build. User authorized deployment; verify latest main/Vercel production status. No migration or environment changes. Previous conversation-layout release 02d0a32 deployed successfully.
+
+
 ## October 15 update: conversation layout (release authorized)
 
 The user authorized publishing/deploying this presentation change. ConversationListingActions in conversations.tsx places the listing status 12px lower with a matching 34px View Listing link alongside it, targeting the conversation listing_id. Existing listing-page authorization remains authoritative. Empty history pagination is no longer rendered; real history navigation remains with reduced spacing. ReplyForm uses a 20px top gap, a centered plain-text/4000-character/no-attachments disclaimer directly below its textarea (aria-describedby), and a smaller 36px Send reply button. Sending, idempotency, permissions and message reads were not changed. No migration/environment changes.
