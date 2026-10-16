@@ -1,5 +1,12 @@
 # Hospital2Hospital context refresh
 
+## October 15 update: compact listing detail (release authorized)
+
+Connected listing details now use src/components/listing-detail.tsx for presentation. Photos are 320px high on desktop (280/240px on small screens), product title is 28px desktop/23px phone, and asking price is 25px desktop/23px phone with a quieter unit/USD label. Facility name/location stack on a shared left edge. Product details use semantic labeled rows, readable capital/disposable labels and Not specified for unclassified stock; redundant descriptions equal to the product name are hidden. Stored inventory classifications/sterile/use flags were not changed or inferred. Seller notes preserve line breaks. Mobile order is photo, summary/actions, then details.
+
+Removed the public listing gallery Refresh photos button; thumbnail selection remains. Editing/phone upload refresh controls and signed private photo policies remain unchanged. No migrations or environment changes. All 122 automated tests, lint without warnings and production build passed. Local Chrome verified desktop/mobile sizing, eight detail rows, facility alignment, no horizontal overflow, missing-photo display and switching between two thumbnails using local test assets. Temporary preview routes were removed before the final build; no hosted data writes were performed. The user has authorized publishing/deploying these cosmetic changes; verify the latest main commit and Vercel production status when resuming. Previous wizard release e719fd3 was successfully published/deployed, and the user reports applying migration 016.
+
+
 ## October 15 update: listing wizard and approved product submissions
 
 Validation for the wizard: all 122 automated tests passed, lint passed without warnings, and the production build passed. Hidden local Chrome checked all four cards at desktop/phone viewport sizes, product selection, disabled/valid Next, draft button labels, photo controls and review. External photo/catalog responses were mocked; no live project operations occurred. Temporary preview routes were removed before the final build.

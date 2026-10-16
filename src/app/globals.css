@@ -65,3 +65,30 @@
 .camera-upload{margin:20px 0}.camera-upload .manage-actions,.phone-handoff .manage-actions{margin-top:16px;flex-wrap:wrap}.camera-preview{margin:20px 0;padding:16px;border:1px solid var(--line);border-radius:8px}.camera-preview img{display:block;width:100%;max-width:400px;height:auto;max-height:350px;object-fit:contain}.phone-handoff{margin:20px 0;padding:20px;border:1px solid var(--line);border-radius:8px;background:var(--white)}.phone-handoff>img{display:block;max-width:100%;height:auto;margin:12px auto}.phone-handoff input{width:100%}.phone-handoff p{margin:12px 0}.camera-upload p[role]{margin-top:14px}
 
 .listing-wizard{margin:auto;width:780px;max-width:calc(100vw - 24px);max-height:92dvh;padding:0;border:1px solid var(--line);border-radius:14px;color:var(--foreground);background:var(--white)}.listing-wizard[open]{display:flex;flex-direction:column}.listing-wizard::backdrop{background:color-mix(in srgb,var(--navy) 45%,transparent)}.wizard-header{padding:24px 28px 18px;border-bottom:1px solid var(--line);flex-shrink:0}.wizard-header h2{font-size:26px;letter-spacing:-.6px}.wizard-progress{padding:0;margin:16px 0;list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.wizard-progress li{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}.wizard-progress li>span{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;background:var(--soft);border:1px solid var(--line);border-radius:50%}.wizard-progress [aria-current=step]{color:var(--primary);font-weight:600}.wizard-progress [aria-current=step]>span{background:var(--primary);color:var(--white)}.wizard-body{padding:22px 28px;overflow:auto;min-height:150px}.wizard-body>label{margin-top:18px}.wizard-body p{margin-bottom:12px}.wizard-footer{padding:18px 28px;border-top:1px solid var(--line);background:var(--white);flex-shrink:0}.wizard-buttons{display:flex;align-items:center;justify-content:flex-end;gap:12px}.wizard-back{margin-right:auto}.wizard-footer>.error{margin-bottom:12px}.listing-wizard .primary:disabled{background:var(--line);color:var(--muted);opacity:1}.wizard-details{border:0;padding:0;min-width:0}.wizard-details .form-grid{margin-top:16px}.wizard-checkbox{display:flex;flex-direction:row;align-items:center;gap:10px}.wizard-checkbox input{width:auto}.wizard-optional{margin-top:20px}.wizard-optional summary{cursor:pointer;color:var(--primary);font-weight:600}.wizard-optional .form-grid{margin-bottom:12px}.wizard-body .form-panel{margin-top:16px;padding:18px}.wizard-body .form-panel h2{font-size:20px}.product-submit-link{margin:20px 0 12px}.wizard-preview{max-width:480px;margin:auto;border:1px solid var(--line);border-radius:9px;padding:18px}.wizard-preview .listing-photo{height:220px}.wizard-preview h3{margin:10px 0}.wizard-setup-drafts{margin:24px 0}.wizard-setup-drafts h2{font-size:22px}.wizard-setup-row{display:flex;align-items:center;flex-wrap:wrap;gap:16px;padding:18px 0;border-bottom:1px solid var(--line)}.wizard-setup-row>div{margin-right:auto}.product-request-card{margin:22px 0}.product-request-card h2{font-size:23px}.product-request-card .badge{margin:12px 0}.product-request-card p{margin:10px 0}.product-request-card .account-form label{margin-top:14px}@media(max-width:500px){.wizard-header{padding:18px}.wizard-header h2{font-size:23px}.wizard-body{padding:18px}.wizard-footer{padding:14px 18px}.wizard-progress{gap:4px}.wizard-progress li{font-size:10px;gap:4px}.wizard-progress li>span{width:22px;height:22px}.wizard-details .form-grid{grid-template-columns:1fr 1fr;gap:14px}.wizard-body input,.wizard-body select{max-width:100%;min-width:0}.wizard-buttons{gap:8px}.wizard-buttons .button{padding:12px 14px}.wizard-preview{padding:14px}}
+
+/* Compact connected listing detail; keep card and editor photo sizes unchanged. */
+.listing-detail .detail-grid{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:32px;align-items:start}
+.listing-detail .listing-photo.large{height:320px}
+.listing-detail .listing-summary{margin-top:0;min-width:0}
+.listing-detail .listing-summary h1{font-size:28px;line-height:1.3;letter-spacing:-.6px;margin:12px 0;overflow-wrap:anywhere}
+.listing-detail .listing-asking-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;margin:22px 0 8px}
+.listing-asking-price>strong{font-size:25px;line-height:1.3;font-weight:600;letter-spacing:-.5px}
+.listing-asking-price>span:not(.badge){font-size:13px;color:var(--muted)}
+.listing-summary .listing-availability{font-size:13px;margin:0 0 12px}
+.listing-status{text-transform:capitalize}
+.listing-detail .listing-facility{display:block;padding:18px;margin:20px 0}
+.listing-detail .listing-facility h3{font-size:16px;line-height:1.4;margin:0;overflow-wrap:anywhere}
+.listing-detail .listing-facility p{font-size:13px;margin:6px 0 0}
+.listing-detail .listing-details-panel{margin-top:20px;padding:22px}
+.listing-details-panel h2{font-size:21px;letter-spacing:-.3px}
+.listing-details-panel .listing-description{margin-top:12px;line-height:1.7}
+.listing-specs{margin:16px 0 0}
+.listing-specs>div{display:grid;grid-template-columns:minmax(95px,.8fr) minmax(0,1.2fr);gap:16px;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px;line-height:1.5}
+.listing-specs dt{color:var(--muted)}
+.listing-specs dd{margin:0;color:var(--foreground);overflow-wrap:anywhere}
+.listing-seller-notes{padding-top:20px}
+.listing-seller-notes h3{font-size:15px;margin-bottom:0}
+.listing-seller-notes p{overflow-wrap:anywhere}
+.listing-contact-actions>.button{margin-top:12px}
+@media(max-width:800px){.listing-detail .detail-grid{grid-template-columns:1fr;gap:22px}.listing-detail .listing-photo.large{height:280px}.listing-detail .listing-detail-content{display:contents}.listing-detail .listing-summary{grid-row:2}.listing-detail .listing-summary h1{font-size:25px}}
+@media(max-width:500px){.listing-detail .listing-photo.large{height:240px}.listing-detail .listing-summary{padding:20px}.listing-detail .listing-summary h1{font-size:23px}.listing-asking-price>strong{font-size:23px}.listing-detail .listing-details-panel{padding:18px}}

@@ -3,7 +3,6 @@ import { IMAGE_UPLOAD_LIMIT_LABEL } from "@/lib/upload-limits.mjs";
 import { CameraUpload } from "./camera-upload";
 import Image from "next/image";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { ActionForm } from "./account-forms";
 import { Icon } from "./marketplace";
 import { removePhoto,arrangePhotos } from "@/app/photo-actions";
@@ -16,8 +15,8 @@ function PhotoImage({photo,large=false,alt}: {photo?:ListingPhoto;large?:boolean
 }
 export function ListingVisual({photos,large=false,name}: {photos:ListingPhoto[];large?:boolean;name:string}) {
   const [selected,setSelected]=useState<string|undefined>(photos[0]?.id);
-  const router=useRouter();const photo=photos.find(p=>p.id===selected) ?? photos[0];
-  return <div className="photo-gallery"><PhotoImage key={photo?.url ?? "empty"} photo={photo} large={large} alt={name}/>{large && <><div className="photo-thumbnails">{photos.map((p,i)=><button key={p.id} type="button" className={p.id===photo?.id ? "selected" : ""} aria-label={`View photo ${i+1}`} aria-pressed={p.id===photo?.id} onClick={()=>setSelected(p.id)}><Image src={p.url!} width={80} height={65} alt={`Photo ${i+1}`} unoptimized/></button>)}</div><button className="button secondary" type="button" onClick={()=>router.refresh()}>Refresh photos</button></>}</div>;
+  const photo=photos.find(p=>p.id===selected) ?? photos[0];
+  return <div className="photo-gallery"><PhotoImage key={photo?.url ?? "empty"} photo={photo} large={large} alt={name}/>{large && photos.length>1 && <div className="photo-thumbnails">{photos.map((p,i)=><button key={p.id} type="button" className={p.id===photo?.id ? "selected" : ""} aria-label={`View photo ${i+1}`} aria-pressed={p.id===photo?.id} onClick={()=>setSelected(p.id)}><Image src={p.url!} width={80} height={65} alt={`Photo ${i+1}`} unoptimized/></button>)}</div>}</div>;
 }
 export function PhotoManager({listingId,photos:initialPhotos,onBusyChange}: {listingId:string;photos:ListingPhoto[];onBusyChange?:(busy:boolean)=>void}) {
   const [photos,setPhotos]=useState(initialPhotos);
