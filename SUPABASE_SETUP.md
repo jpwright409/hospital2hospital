@@ -525,3 +525,47 @@ Drafts are retained privately until published or deliberately removed; at most 1
 - Publish the reviewed draft: same listing/photos become public and existing watchlist matching works. Drafts must never generate premature match emails. Test stale publish revision and suspension/revocation before publish. Delete another draft and verify it disappears from the dashboard without disturbing any other listing's photos.
 
 Local verification executes actual migrations/RLS/Storage contract tests in PGlite and upload failure/duplicate retry tests; it does not certify hosted Storage, real camera permissions or physical-device behavior. The implementation was checked with headless Chrome for actual image preparation and anonymous login/API behavior. npm audit reported five high-severity advisories in the existing lint-tooling dependency chain (braces/micromatch/fast-glob/eslint-config-next), not qrcode; no forced framework downgrade was performed.
+
+
+## One-time owner password recovery without SMTP
+
+The operator-only tool scripts/recover-owner-password.mjs targets only paul@babursolutions.com in https://rmgvchexfacjigukyvrx.supabase.co. It is never imported by the app, run by builds or exposed through a route. It uses the existing server-only SUPABASE_SECRET_KEY from ignored .env.local for this explicitly authorized administrative recovery; ordinary account operations still use publishable clients.
+
+From an interactive VS Code terminal (not the Output pane), in the project directory:
+
+~~~powershell
+node --env-file=.env.local scripts/recover-owner-password.mjs
+node --env-file=.env.local scripts/recover-owner-password.mjs --execute
+~~~
+
+The first command checks local configuration only: no service connection or password change. The second connects only after confirming the displayed project/account by typing the exact recovery email. It finds that account, asks for a new 12-128-character password twice with all character echo disabled, rechecks the exact verified Auth identity and sends only the password attribute to Supabase's server-side Auth Admin API. Supabase may impose additional strength requirements. Passwords are never passed as arguments, saved to a file/environment variable or printed; they necessarily exist briefly in process memory and are sent over HTTPS to Auth. Ctrl+C/Escape cancels hidden entry. Piped input and arbitrary target/project/password arguments are rejected. Do not run this command in chat, a recording/transcribed console, CI, browser code or Vercel.
+
+This operation does not create/promote/confirm/unban users, change memberships, disable MFA or modify application rows. It refuses missing, ambiguous, unconfirmed or Auth-suspended accounts. Pagination is bounded and no other account identities are displayed. A network failure during the write can leave an uncertain result: try login with the newly entered password before retrying. There is no automatic retry. The tool is a narrow operator recovery, not a replacement for normal email recovery and not proof that SMTP is configured.
+
+After success, log in at https://hospital2hospital.vercel.app with the new password. Email confirmation/recovery SMTP, redirects and templates still need separate verification. Do not paste the password or emailed tokens into chat. No remote recovery was executed by the agent while preparing/testing this tool; tests use mock Auth responses and the default configuration-only command.
+
+## Four-step listing creation and approved catalog submissions (migration 016)
+
+Apply supabase/migrations/20261015001600_listing_wizard_products.sql AFTER 015 and before deploying the wizard code. Use the same trusted SQL Editor/migration process as earlier versions; do not rerun older applied migrations. The script is transactional and should run in full. If PostgREST reports missing RPCs/tables after applying, refresh its schema cache with NOTIFY pgrst, 'reload schema'; then retry. This implementation did not apply hosted migrations or deploy. No new environment variables, buckets or service credentials are required.
+
+The user has successfully tested the existing migration 015 camera/photo/QR workflow live. This new UI reuses that private Storage flow. New tables product_submissions and listing_wizard_drafts have immediate RLS and no ordinary write grants. All writes use guarded, revision-aware RPCs, live confirmed Auth and eligible approved facility ownership/editor roles. Platform administrators review products but have no inventory override.
+
+Create listing now opens Product, Details, Photos and Review cards. Next stays gray until required fields are valid. Back retains input. Cancel exits the first card. Save Draft on later cards saves and returns to My Facility. Incomplete details save separately from stock without guessing quantities/prices; My Facility shows these under Continue a listing setup. They have no listing ID or photos until valid details are prepared. Discard setup removes only unlinked setup drafts. Once linked, the real private draft and its photos are retained, and the Edit link resumes the wizard. Existing listing deletion remains the way to remove linked stock; no automatic draft/photo purge was added. Revision conflicts require reload rather than overwriting a colleague.
+
+Missing products: click Don't see your product? Submit a new product line here! Approved inventory managers submit manufacturer, catalog/SKU, name, category, capital/disposable type and optional description at /products/submit. The request stays pending and does not create stock or enter the product dropdown. A confirmed platform administrator opens My account > Product approval (/admin/products), reviews and approves/rejects with an optional note. Approval resolves normalized manufacturer/catalog identity without overwriting a matching shared reference. Sellers can view their facility's submission statuses and start a listing for an approved product. Trusted existing/imported reference products remain available. Legacy direct create-listing/create-draft calls can no longer introduce unapproved products.
+
+Migration rollback: do not drop the new tables or blindly move the wrapper function back after users create data. Keep a backup and use a versioned corrective migration. Reverting only the UI to the previous release retains catalog approval enforcement; its old propose-new-product flow will correctly refuse unapproved references.
+
+Manual hosted checklist after applying 016:
+
+1. As an approved owner/editor, open Create listing: unselected Next is gray; search/select a real approved product and advance. Cancel from step 1 returns to My Facility.
+2. Save incomplete step-2 details; verify an unfinished setup appears with no public stock. Resume, enter quantity, package/unit, USD price (including zero), type and condition; invalid data must keep Next disabled. Verify optional expiry, sterile/use flags, packaging and notes survive Back, Save Draft and reload.
+3. Advance to Photos. Take/select a supported image, upload and use the authenticated QR from a second device. Verify six-photo limit, cover/order/removal, retry safety and refresh without loss of details. Save Draft and resume: same listing/photos. Upload/cancel a selected local preview before leaving Photos.
+4. Review the latest photos and listing preview, Back to edit details, then return to review and Publish. Verify one public listing with correct USD/package data and the same photos. Repeated submissions must not duplicate stock. Existing search, saves, messages and listing editing must still work.
+5. Submit a missing product. Check pending status and absence from the dropdown. As platform administrator, approve it, then refresh/search the dropdown. Reject another request and verify the review note. Submit normalized duplicate identities from two facilities: approval must reuse the canonical product without changing its existing metadata. No stock is created by review.
+6. Repeat draft read/write, photo and proposal operations as an unrelated facility, viewer, revoked member and pending/suspended facility. Deny access even via direct RPC/table requests. A platform administrator without eligible inventory membership can review products but cannot edit others' setup drafts/photos.
+7. Edit the same draft from two browser tabs: stale saves/publish must fail without overwriting. Suspend/revoke the seller before save, photo refresh/upload or publish: operations must fail closed. Try forged facility/product/privileged JSON fields and legacy direct unapproved-product creation: reject them.
+
+Local validation executes actual migration SQL, RLS, grants, transactions and approval/legacy-bypass checks in PGlite, with mocked external Auth/Storage contracts. Browser presentation checks use fictional local fixtures and mocked catalog/photo endpoints. These do not certify hosted Auth/PostgREST, real signed Storage URLs, email delivery or a physical phone; the checklist above remains required.
+
+Verification record for this change: 122 automated tests passed (including 11 new listing-wizard/product-approval tests), lint passed without warnings, and production build passed. Local Chrome checked all four cards on desktop/mobile viewports, product selection, Next validation, draft labels, photo controls and review with mocked APIs. Temporary preview routes were removed. Hosted wizard/approval/Storage operations were not executed.

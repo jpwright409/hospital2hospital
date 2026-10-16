@@ -1,3 +1,4 @@
+import {seedApprovedProducts} from "./helpers/catalog-fixtures.mjs";
 import {PGlite} from '@electric-sql/pglite';
 import {readFile,readdir} from 'node:fs/promises';
 import {test,before,after} from 'node:test';
@@ -16,6 +17,7 @@ before(async()=>{
  await db.exec(`create role anon nologin;create role authenticated nologin;create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,raw_user_meta_data jsonb default '{}');create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
  await installStorageContract(db);
  for(const f of(await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort()) await db.exec(await readFile(new URL(`../supabase/migrations/${f}`,import.meta.url),'utf8'));
+ await seedApprovedProducts(db,[product,{...product,manufacturer:"Other Brand"}]);
  for(const user of[seller,buyer,other,pending,viewer]) await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[user,`${user}@example.test`]);
  const facilities=[];for(const user of[seller,buyer,other,pending]) {await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);facilities.push(await scalar("select public.onboard_facility('Test facility','City','WI','hospital',gen_random_uuid())"));}
  [fa,fb,fc,fp]=facilities;await db.query("update public.facilities set status='approved' where id=any($1::uuid[])",[[fa,fb,fc]]);

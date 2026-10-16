@@ -93,3 +93,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Phone/photo inputs prepare supported still images locally (20 MB original / 20 MP max, 2000px output) and send <=3 MB. Server sanitization remains authoritative. Never import sharp or privileged clients into browser preparation.
 - Poll only the private no-store photo API every 20 seconds while visible; preserve unsaved inventory fields. Photo actions do not revalidate the edit form. Preserve same-photo submission IDs on retry; never delete an in-flight upload on duplicate reservation errors.
 - See the authenticated camera/phone section of SUPABASE_SETUP.md for migration order, retained-draft cleanup and real two-device tests.
+
+- Operator recovery exception: scripts/recover-owner-password.mjs is an explicitly invoked, account/project-pinned, local-only Auth Admin tool using the existing server-only key. Default mode is configuration-only. Never invoke --execute for the user, collect passwords in chat, import it into app code, expose it as an API or broaden its targets. Tests must mock Auth; the user enters hidden passwords in their own terminal.
+
+## Listing wizard and product approval
+
+- Migration 016 introduces private incomplete listing_wizard_drafts, product_submissions, and guarded RPCs. Connected /listings/new is a four-step modal: existing product, facility details, existing photo/phone tools, review/publish. Classic editing of published inventory is unchanged.
+- Save Draft may persist incomplete details separately from stock. Only validated details create a real private draft for photos; never invent quantities/prices. Resume setup and linked drafts from My Facility. Revisions prevent overwriting another editor; keep product/facility immutable once linked to stock. No automatic purge.
+- Seller-proposed references remain pending until confirmed platform administrators approve at /admin/products. Approval resolves normalized manufacturer/catalog identity without overwriting shared records or creating stock. Migration 016 also closes legacy create-listing/create-draft product-creation bypasses. Trusted catalog imports remain operator-only.
+- All new ordinary operations use publishable clients and live approved owner/editor permissions, including draft reads and direct RPCs. No platform administrator inventory override. Existing private photos, six-photo limits, sanitation, authenticated QR access and cleanup remain authoritative.
+- Run npm test, npm run lint and npm run build; distinguish PGlite/mock-browser coverage from hosted PostgREST/Storage/device tests. Apply 016 only with explicit authorization; no new keys or bucket configuration.

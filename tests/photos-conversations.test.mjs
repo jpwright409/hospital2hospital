@@ -1,3 +1,4 @@
+import {seedApprovedProducts} from "./helpers/catalog-fixtures.mjs";
 import {PGlite} from "@electric-sql/pglite";
 import {readFile,readdir} from "node:fs/promises";
 import {test,before,after} from "node:test";
@@ -33,6 +34,7 @@ before(async()=>{
   await db.query("update public.facilities set status='approved' where id=any($1::uuid[])",[[fa,fb,fc]]);
   await db.query("insert into public.facility_memberships(facility_id,user_id,role) values($1,$2,'viewer'),($1,$3,'administrator'),($4,$5,'inventory_editor')",[fb,viewer,facilityAdmin,fa,editor]);
   await db.query("insert into private.platform_administrators(user_id,bootstrap_reason) values($1,'Test operator bootstrap')",[platform]);
+  await seedApprovedProducts(db,[{manufacturer:'Test Brand',catalog_number:'PHOTO-001',name:'Photo reference',category:'General Surgery'}]);
   const product={manufacturer:'Test Brand',catalog_number:'PHOTO-001',name:'Photo reference',category:'General Surgery'};
   const inventory={quantity:2,quantity_unit:'each',units_per_package:1,price_usd:'10.00',condition:'New / unopened',sterile:true,single_use:true};
   await db.query("select set_config('request.jwt.claim.sub',$1,false)",[a]);

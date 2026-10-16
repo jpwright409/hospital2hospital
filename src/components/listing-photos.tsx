@@ -19,7 +19,7 @@ export function ListingVisual({photos,large=false,name}: {photos:ListingPhoto[];
   const router=useRouter();const photo=photos.find(p=>p.id===selected) ?? photos[0];
   return <div className="photo-gallery"><PhotoImage key={photo?.url ?? "empty"} photo={photo} large={large} alt={name}/>{large && <><div className="photo-thumbnails">{photos.map((p,i)=><button key={p.id} type="button" className={p.id===photo?.id ? "selected" : ""} aria-label={`View photo ${i+1}`} aria-pressed={p.id===photo?.id} onClick={()=>setSelected(p.id)}><Image src={p.url!} width={80} height={65} alt={`Photo ${i+1}`} unoptimized/></button>)}</div><button className="button secondary" type="button" onClick={()=>router.refresh()}>Refresh photos</button></>}</div>;
 }
-export function PhotoManager({listingId,photos:initialPhotos}: {listingId:string;photos:ListingPhoto[]}) {
+export function PhotoManager({listingId,photos:initialPhotos,onBusyChange}: {listingId:string;photos:ListingPhoto[];onBusyChange?:(busy:boolean)=>void}) {
   const [photos,setPhotos]=useState(initialPhotos);
   const galleryDirty=useRef(false);
   const [refreshError,setRefreshError]=useState("");
@@ -38,12 +38,12 @@ export function PhotoManager({listingId,photos:initialPhotos}: {listingId:string
       setCover(previous=>galleryDirty.current&&previous&&ids.includes(previous)?previous:next.find(p=>p.is_cover)?.id??ids[0]);
     }catch(error){setRefreshError((error as Error).message);}
   },[listingId]);
-  useEffect(()=>{const timer=setInterval(()=>{if(document.visibilityState==='visible')void loadPhotos();},20000);return()=>clearInterval(timer);},[loadPhotos]);
+  useEffect(()=>{const initial=setTimeout(()=>void loadPhotos(),0);const timer=setInterval(()=>{if(document.visibilityState==='visible')void loadPhotos();},20000);return()=>{clearTimeout(initial);clearInterval(timer);};},[loadPhotos]);
   async function openPhone(){setLinkBusy(true);setHandoffError('');setCopied(false);try{const response=await fetch('/api/listings/'+listingId+'/photos?handoff=1',{cache:'no-store'});const body=await response.json();if(!response.ok)throw new Error(body.error||'Phone link unavailable.');setHandoff(body);}catch(error){setHandoffError((error as Error).message);}finally{setLinkBusy(false);}}
   const ordered=order.map(id=>ready.find(p=>p.id===id)).filter((p):p is ListingPhoto=>!!p);
   function move(index:number,direction:number) {galleryDirty.current=true;setOrder(previous=>{const next=[...previous];[next[index],next[index+direction]]=[next[index+direction],next[index]];return next;});}
   return <section className="panel form-panel"><h2>Listing photos</h2><p>Up to 6 photos, {IMAGE_UPLOAD_LIMIT_LABEL} each. JPEG, PNG or WebP; image content is decoded and sanitized. Photos remain private while this listing is a draft.</p>
-    <CameraUpload listingId={listingId} uploaded={loadPhotos} disabled={photos.filter(p=>p.state!=='deleting').length>=6}/>
+    <CameraUpload listingId={listingId} uploaded={loadPhotos} disabled={photos.filter(p=>p.state!=='deleting').length>=6} onBusyChange={onBusyChange}/>
     {photos.filter(p=>p.state!=='deleting').length>=6 && <p className="notice">All six photo slots are in use. Remove a photo or unfinished upload to add another.</p>}
     <div className="manage-actions"><button className="button secondary" type="button" disabled={linkBusy} onClick={()=>void openPhone()}>{linkBusy?'Preparing link...':'Upload from phone'}</button><button className="button secondary" type="button" onClick={()=>void loadPhotos()}>Refresh photos</button></div>
     {refreshError && <p className="error" role="alert">{refreshError} Your listing edits have been kept. Sign in again if your session expired, then refresh photos.</p>}

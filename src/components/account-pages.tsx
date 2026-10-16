@@ -72,7 +72,7 @@ export async function AccountWorkspace({ notice }: { notice?: string }) {
       <section className="panel"><h2>Account actions</h2><div className="account-links vertical">
         <Link href="/account/contacts">Manage facility contacts</Link><Link href="/watchlist">Manage watchlists</Link><Link href="/refer">Refer a facility</Link><Link href="/dashboard">Manage facility inventory</Link><Link href="/inbox">Facility inbox</Link><Link href="/account/onboarding">Onboard another facility</Link><Link href="/auth/update-password">Update password</Link>
         <Link href="/marketplace">Browse marketplace</Link><Link href="/saved">View private saved listings</Link>
-        {account.isPlatformAdministrator && <><Link href="/admin/facilities">Platform facility approvals</Link><Link href="/admin/featured">Featured listing review</Link><Link href="/admin/support">Platform support tickets</Link></>}
+        {account.isPlatformAdministrator && <><Link href="/admin/facilities">Platform facility approvals</Link><Link href="/admin/featured">Featured listing review</Link><Link href="/admin/products">Product approval</Link><Link href="/admin/support">Platform support tickets</Link></>}
       </div><p>Facility ownership and platform administration are separate permissions. No account is automatically promoted.</p></section>
     </div>
     <p className="notice">Connected inventory and private saved listings use Supabase. Demo stock is never used after a connection failure. Listing photos and private conversations are connected; watchlist email alerts are optional and require configured delivery.</p>

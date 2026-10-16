@@ -1,3 +1,4 @@
+import {seedApprovedProducts} from "./helpers/catalog-fixtures.mjs";
 import {PGlite} from '@electric-sql/pglite';
 import {readFile,readdir} from 'node:fs/promises';
 import {test,before,after} from 'node:test';
@@ -20,6 +21,7 @@ before(async()=>{
  await db.exec(`create role anon nologin;create role authenticated nologin;create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,raw_user_meta_data jsonb default '{}');create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
  await installStorageContract(db);
  for(const f of(await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(`../supabase/migrations/${f}`,import.meta.url),'utf8'));
+ await seedApprovedProducts(db,[product]);
  for(const user of[a,b,c,viewer,editor,revoked,pending,admin])await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[user,`${user}@example.test`]);
  const facilities=[];for(const user of[a,b,c,pending]){await who(user);facilities.push(await scalar("select public.onboard_facility('Phone fixture','City','WI','hospital',gen_random_uuid())"));}
  [fa,fb,fc,fp]=facilities;await db.query("update public.facilities set status='approved' where id=any($1::uuid[])",[[fa,fb,fc]]);
@@ -54,7 +56,7 @@ test('draft creation is transactional, forces private status and deduplicates un
  });
  await assert.rejects(as(a,async()=>{const request=randomUUID();await create(fa,request);await create(fa,request,product,{...inventory,quantity:2});}),{code:'42501'});
  const beforeCount=await scalar('select count(*) from public.products');
- await assert.rejects(as(a,()=>create(fa,randomUUID(),{...product,catalog_number:'ROLLBACK-PHONE'},{...inventory,quantity:0})));
+ await assert.rejects(as(a,()=>create(fa,randomUUID(),product,{...inventory,quantity:0})));
  assert.equal(await scalar('select count(*) from public.products'),beforeCount);
  await deny(a,'select * from private.listing_draft_requests');
 });

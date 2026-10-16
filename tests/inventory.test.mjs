@@ -1,3 +1,4 @@
+import {seedApprovedProducts} from "./helpers/catalog-fixtures.mjs";
 import { PGlite } from "@electric-sql/pglite";
 import { readFile,readdir } from "node:fs/promises";
 import { test,before,after } from "node:test";
@@ -27,6 +28,7 @@ before(async()=>{
     grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
   await installStorageContract(db);
   for(const file of (await readdir(new URL("../supabase/migrations/",import.meta.url))).filter(f=>f.endsWith(".sql")).sort()) await db.exec(await readFile(new URL(`../supabase/migrations/${file}`,import.meta.url),"utf8"));
+  await seedApprovedProducts(db,[product,{...product,manufacturer:"Other Manufacturer"},{...product,catalog_number:"EDITOR-NEW"}]);
   for(const user of users) await db.query("insert into auth.users(id,email_confirmed_at) values($1,now())",[user]);
   const facilities=[];
   for(const user of [a,b,pending,suspended]) {
@@ -112,9 +114,9 @@ test("direct API writes, ownership/product transfers, and shared product edits a
     assert.equal(await scalar("select count(*)::int from public.products where normalized_catalog_number='cat-001'"),2);
   });
 });
-test("failed inventory insertion rolls back product resolution; concurrent edit revision is enforced",async()=>{
+test("invalid inventory leaves approved catalog intact; concurrent edit revision is enforced",async()=>{
   const before=await scalar("select count(*)::int from public.products");
-  await assert.rejects(as(a,()=>create(fa,{...product,catalog_number:"ROLLBACK"},{...inventory,quantity:0})),{code:"23514"});
+  await assert.rejects(as(a,()=>create(fa,product,{...inventory,quantity:0})),{code:"23514"});
   assert.equal(await scalar("select count(*)::int from public.products"),before);
   await assert.rejects(as(a,()=>update(active,{notes:"stale"},99)),{code:"22023"});
   await assert.rejects(as(a,()=>create(fa,product,{...inventory,price_usd:"1.005"})),{code:"22023"});

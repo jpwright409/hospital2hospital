@@ -5,13 +5,14 @@ import {useEffect,useRef,useState} from "react";
 import {uploadPhoto} from "@/app/photo-actions";
 import {prepareCameraPhoto} from "@/lib/photos/prepare";
 
-export function CameraUpload({listingId,uploaded,disabled=false}:{listingId:string;uploaded:()=>Promise<void>;disabled?:boolean}) {
+export function CameraUpload({listingId,uploaded,disabled=false,onBusyChange}:{listingId:string;uploaded:()=>Promise<void>;disabled?:boolean;onBusyChange?:(busy:boolean)=>void}) {
   const requestId=useRef<string>("");
   const camera=useRef<HTMLInputElement>(null),gallery=useRef<HTMLInputElement>(null);
   const [photo,setPhoto]=useState<File|null>(null),[preview,setPreview]=useState<string|null>(null);
   const previewRef=useRef<string|null>(null);
   function replacePhoto(next:File|null){if(previewRef.current)URL.revokeObjectURL(previewRef.current);const url=next?URL.createObjectURL(next):null;previewRef.current=url;setPhoto(next);setPreview(url);}
   const [busy,setBusy]=useState(""),[error,setError]=useState(""),[success,setSuccess]=useState("");
+  useEffect(()=>{onBusyChange?.(!!busy||!!photo);},[busy,photo,onBusyChange]);
   useEffect(()=>()=>{if(previewRef.current)URL.revokeObjectURL(previewRef.current);},[]);
   async function choose(file?:File){if(!file)return;setBusy("Preparing photo...");setError("");setSuccess("");replacePhoto(null);try{replacePhoto(await prepareCameraPhoto(file));requestId.current=crypto.randomUUID();}catch(e){setError((e as Error).message);}finally{setBusy("");}}
   async function send(){if(!photo||busy)return;setBusy("Uploading photo...");setError("");setSuccess("");try{const form=new FormData();form.set("listing_id",listingId);form.set("photo",photo);form.set("photo_request_id",requestId.current);const result=await uploadPhoto({},form);if(result.error)throw new Error(result.error);replacePhoto(null);setSuccess("Photo uploaded.");await uploaded();}catch(e){setError((e as Error).message);}finally{setBusy("");}}

@@ -13,6 +13,15 @@ export type SearchParams = Record<string, string | string[] | undefined>;
 export type InventoryQuery = { q: string; category: string; manufacturer: string; location: string; sort: string; page: number; status: string; seller_facility: string; procedure: string; kind: string };
 export type SearchResult = { items: InventoryListing[]; total: number; page: number; page_size: number };
 export type InventoryState = { error?: string; success?: string };
+export type WizardDraft = {id:string;facility_id:string;product_id:string;data:Record<string,string>;step:number;revision:number;listing_id:string|null;listing_revision:number|null;published_at:string|null};
+export const initialWizardDetails:Record<string,string> = {inventory_kind:"",quantity:"",quantity_unit:"each",units_per_package:"1",price_usd:"",price_negotiable:"no",procedure_type:"Other",condition:"New / unopened",expiration:"",sterile:"no",single_use:"yes",packaging:"",notes:""};
+export function wizardInventoryForm(data:Record<string,string>) {
+  const form=new FormData();for(const [key,value] of Object.entries(data))form.set(key,value);form.set("status","draft");return form;
+}
+export function wizardDetailsComplete(data:Record<string,string>) {
+  if(!["capital","disposable"].includes(data.inventory_kind))return false;
+  try {validateInventory(wizardInventoryForm(data));return true;}catch{return false;}
+}
 export const procedures = ["General Surgery","ENT","Orthopedics","Plastic Surgery","Urology","Gynecology / OBGYN","Cardiovascular","Endoscopy / GI","Ophthalmology","Neurosurgery","Wound Care","Other"];
 export const quantityUnits = ["each", "box", "case", "pack"];
 export const conditions = ["New / unopened", "New / open packaging", "Used — good", "Used — fair"];

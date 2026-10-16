@@ -1,5 +1,5 @@
 import { ListingForm } from "@/components/marketplace";
-import { ConnectedEditor } from "@/components/connected-inventory";
+import { ConnectedWizard } from "@/components/connected-wizard";
 import { getAppMode } from "@/lib/app-mode";
 import { type SearchParams } from "@/lib/inventory/types";
-export default async function Page({searchParams}: {searchParams: Promise<SearchParams>}) { return getAppMode() === "connected" ? <ConnectedEditor params={await searchParams}/> : <ListingForm/>; }
+export default async function Page({searchParams}: {searchParams: Promise<SearchParams>}) { return getAppMode() === "connected" ? <ConnectedWizard params={await searchParams}/> : <ListingForm/>; }
