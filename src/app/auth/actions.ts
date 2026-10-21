@@ -38,6 +38,8 @@ export async function login(_previous: ActionState, form: FormData): Promise<Act
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: serviceError(error) };
+    const enabled=await supabase.rpc("account_access_enabled");
+    if(enabled.error||enabled.data!==true){await supabase.auth.signOut();return {error:enabled.error?serviceError(enabled.error):"This account is disabled. Contact support."};}
   } catch (error) { return { error: serviceError(error) }; }
   revalidatePath("/", "layout");
   redirect(photoReturnPath(value(form,"next")));

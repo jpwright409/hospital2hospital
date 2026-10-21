@@ -7,6 +7,7 @@ const tabs=[
   ["/admin/products","Product approvals"],
   ["/admin/featured","Featured listing review"],
   ["/admin/support","Support tickets"],
+  ["/admin/users","Users"],
 ];
 export function FacilitatorTabs(){
   const path=usePathname();

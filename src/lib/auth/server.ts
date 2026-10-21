@@ -25,6 +25,11 @@ export async function authenticatedClient() {
   if (error && error.name !== "AuthSessionMissingError" && error.status !== 400 && error.status !== 401) {
     throw new Error(serviceError(error));
   }
+  if(data.user){
+    const enabled=await supabase.rpc("account_access_enabled");
+    if(enabled.error)throw new Error(serviceError(enabled.error));
+    if(enabled.data!==true)redirect("/auth/disabled");
+  }
   return { supabase, user: data.user };
 }
 
