@@ -1,3 +1,11 @@
+## October 23: signed-out homepage listing preview
+
+The welcome login view now shows a mission statement, a full-width scrollable preview of up to 12 current public listings, and resource links. No migrations, new environment variables or privileged credentials are required. The public GET /api/public-listing-preview always creates a session-free publishable-key client, ignores caller identity/filters, and uses existing anonymous inventory/photo RLS. It returns only the narrow public card projection and one signed cover image per listing, with private/no-store responses and no shared image optimization. Inactive/sold/deleted stock and unapproved facilities remain excluded by the existing database permissions.
+
+Private photo URLs still expire after 60 seconds; visible previews refresh every 45 seconds and when the tab becomes visible again. Previously issued bearer URLs may remain usable until expiry, and already loaded image bytes cannot be recalled. Empty and unavailable states never show fictional stock. Form input remains independent of preview refresh/failure. Auto-scroll pauses on hover/focus/manual scrolling, has a pause/resume button, and respects reduced motion. The registration/recovery/confirmation welcome variants remain focused on their cards.
+
+Local checks: all 155 tests, lint and production build passed. Browser checks used intercepted fictional previews on the actual root and submitted no forms. A separate read-only anonymous hosted check successfully read 5 public listings and signed 1 cover photo; no data mutations. After deployment, open the site signed out on desktop/phone, check preview photos/links and pause/manual scrolling, test reduced motion, and leave it open past one minute to verify photo renewal. Verify authenticated users still land on Marketplace and signup/reset links retain their existing flows.
+
 ## October 22: automatic watchlist/referral delivery and account removal
 
 The user confirms Supabase SMTP, redirects, password recovery, registration confirmation and manual account invitations work against the hosted project. Those Auth emails are separate from the application email queue below.

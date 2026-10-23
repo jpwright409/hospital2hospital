@@ -81,6 +81,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Featured listings and Marketplace landing
 
+- The signed-out root login view includes an informational public listing preview below the form. Register/forgot/resend welcome variants retain their focused cards. /api/public-listing-preview must always use an isolated session-free publishable client and existing anonymous RLS, never cookies or secret credentials. Keep its query bounded/fixed, projection narrow and responses no-store. Renew 60-second photo URLs while visible; errors must not replace inventory with demo fixtures or disrupt login. Auto-scroll must pause for focus/hover/manual scrolling and respect reduced motion.
+
 - Migration 014 adds RLS-protected boost requests and two featured slots. Approved live inventory managers may request only their own active stock; platform administrators alone review. All writes use guarded RPCs with transactional slot serialization, immutable listing/facility identity and stale revision checks. Never self-approve or add fees/payments.
 - Public featured reads use the safe inventory projection with active/nondeleted/approved checks in one SQL snapshot. No private stock or fictional fallback. Connected root shows a standalone welcome/login page to signed-out visitors and redirects confirmed signed-in users to Marketplace; successful login still lands on Marketplace. Demo root still lands on Marketplace. Preserve password recovery and onboarding destinations. Filter popup drafts must not change results until Apply; keep applied URL state and reset pagination.
 
