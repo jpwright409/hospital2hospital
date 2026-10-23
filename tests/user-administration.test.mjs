@@ -13,7 +13,7 @@ const denied=(user,sql,args=[],role)=>assert.rejects(as(user,()=>db.query(sql,ar
 const begin=(action,target=owner,email='',expected='owner@example.test',id=randomUUID(),name='',note=reason)=>scalar('select public.begin_account_admin_action($1,$2,$3,$4,$5,$6,$7)',[id,action,target,email,name,expected,note]);
 const finish=(id,token,success,created=null)=>scalar('select public.finish_account_admin_action($1,$2,$3,$4)',[id,token,success,created]);
 before(async()=>{
- await db.exec(`create role anon nologin;create role authenticated nologin;create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,banned_until timestamptz,raw_user_meta_data jsonb default '{}');create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);await installStorageContract(db);
+ await db.exec(`create role anon nologin;create role authenticated nologin;create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,banned_until timestamptz,deleted_at timestamptz,raw_user_meta_data jsonb default '{}');create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);await installStorageContract(db);
  for(const f of(await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL('../supabase/migrations/'+f,import.meta.url),'utf8'));
  for(const [id,email,confirmed]of[[admin,'admin@example.test',true],[conner,'conner@babursolutions.com',true],[owner,'owner@example.test',true],[other,'other@example.test',true],[unconfirmed,'pending@example.test',false]])await db.query("insert into auth.users(id,email,email_confirmed_at) values($1,$2,case when $3 then now() else null end)",[id,email,confirmed]);
  await db.query("insert into private.platform_administrators(user_id,bootstrap_reason) values($1,'Local admin fixture')",[admin]);
@@ -68,7 +68,7 @@ test('invitations are pending manual accounts, duplicate emails denied, and acco
  const newUser=randomUUID();await db.query('insert into auth.users(id,email) values($1,$2)',[newUser,'invite@example.test']);await service(()=>finish(id,a.token,true,newUser));assert.equal((await begin('invite',null,'invite@example.test','',id,'Invited user')).execute,false);assert.equal(await scalar('select count(*) from public.facility_memberships where user_id=$1',[newUser]),0);
  await who(conner);for(let i=0;i<20;i++)await begin('invite',null,`limit-${i}@example.test`,'',randomUUID(),'Invited user');await assert.rejects(as(conner,()=>begin('invite',null,'limit-21@example.test','',randomUUID(),'Invited user')),{code:'22023'});
 });
-function mockAdmin(user={id:'target',email:'current@example.test',email_confirmed_at:'2026-10-21'}){const calls=[];return {calls,auth:{admin:{getUserById:async id=>{calls.push(['get',id]);return {data:{user}};},updateUserById:async(id,attrs)=>{calls.push(['update',id,attrs]);return {data:{user:{id}}};},inviteUserByEmail:async(email,options)=>{calls.push(['invite',email,options]);return {data:{user:{id:'new',email}}};}},resetPasswordForEmail:async(email,options)=>{calls.push(['reset',email,options]);return {};}}};}
+function mockAdmin(user={id:'target',email:'current@example.test',email_confirmed_at:'2026-10-21'}){const calls=[];return {calls,auth:{admin:{deleteUser:async(id,soft)=>{calls.push(['remove',id,soft]);return {data:{user:{id}}};},getUserById:async id=>{calls.push(['get',id]);return {data:{user}};},updateUserById:async(id,attrs)=>{calls.push(['update',id,attrs]);return {data:{user:{id}}};},inviteUserByEmail:async(email,options)=>{calls.push(['invite',email,options]);return {data:{user:{id:'new',email}}};}},resetPasswordForEmail:async(email,options)=>{calls.push(['reset',email,options]);return {};}}};}
 test('Auth operations use immutable target rechecks, narrow attributes and the actual verified reset address',async()=>{
  for(const [action,attrs]of[['disable',{ban_duration:'876000h'}],['enable',{ban_duration:'none'}],['email',{email:'new@example.test'}]]){const mock=mockAdmin();await performUserAdminOperation(mock,{action,targetId:'target',expectedEmail:'current@example.test',email:'new@example.test'},'https://example.test/auth/accept-account');assert.deepEqual(mock.calls,[['get','target'],['update','target',attrs]]);}
  const mock=mockAdmin();await performUserAdminOperation(mock,{action:'reset',targetId:'target',expectedEmail:'current@example.test',email:'forged@example.test'},'https://example.test/auth/accept-account');assert.equal(mock.calls[1][1],'current@example.test');
@@ -101,4 +101,90 @@ test('Server Action never repeats external work after a duplicate or denied audi
 });
 test('Server Action rechecks live administrator permission after reserving an operation',async()=>{
  const s=actionContext({livePermission:false});const result=await manageUser({},actionForm());assert.ok(result.error);assert.equal(s.client.calls.length,0);assert.equal(s.finishes[0][1].p_success,false);
+});
+
+test('removal rejects anonymous users, ordinary users, all active administrators and facility owners',async()=>{
+ for(const user of[owner,other,unconfirmed,null])await denied(user,'select public.begin_account_admin_action($1,$2,$3,$4,$5,$6,$7)',[randomUUID(),'remove',owner,'','','owner@example.test',reason],user===null?'anon':undefined);
+ for(const [target,email,code]of[[admin,'admin@example.test','42501'],[conner,'conner@babursolutions.com','42501'],[owner,'owner@example.test','22023']])await assert.rejects(as(admin,()=>begin('remove',target,'',email)),{code});
+ await denied(admin,'select public.authorize_account_removal($1,$2)',[randomUUID(),randomUUID()]);
+});
+
+test('removal is fail-closed, irreversible, private, idempotent and preserves shared inventory/history',async()=>{
+ const target=randomUUID(),id=randomUUID();await who(null);await db.query("insert into auth.users(id,email,email_confirmed_at) values($1,'remove@example.test',now())",[target]);
+ await db.query("insert into public.facility_memberships(facility_id,user_id,role) values($1,$2,'inventory_editor')",[facility,target]);
+ await db.query('insert into public.saved_listings(user_id,listing_id) values($1,$2)',[target,listing]);
+ await who(admin);const buyerFacility=await scalar("select public.onboard_facility('Other participant','Austin','TX','hospital',gen_random_uuid())");await db.query("update public.facilities set status='approved' where id=$1",[buyerFacility]);
+ const conversation=await scalar('insert into public.conversations(listing_id,buyer_facility_id,seller_facility_id) values($1,$2,$3) returning id',[listing,buyerFacility,facility]);
+ const message=await scalar("insert into public.conversation_messages(conversation_id,sequence,author_user_id,author_facility_id,author_label,body,request_id) values($1,1,$2,$3,'Original business author','Retained shared message',gen_random_uuid()) returning id",[conversation,target,facility]);
+ await db.query("insert into public.watchlists(user_id,name,criteria) values($1,'Removal watch','{\"q\":\"supply\"}')",[target]);
+ await who(admin);const job=await begin('remove',target,'','remove@example.test',id);
+ assert.equal((await begin('remove',target,'','remove@example.test',id)).execute,false);
+ await as(target,async()=>assert.equal(await scalar('select public.account_access_enabled()'),false));
+ await assert.rejects(service(()=>finish(id,job.token,true)),{code:'22023'});
+ await assert.rejects(service(()=>scalar('select public.authorize_account_removal($1,$2)',[id,randomUUID()])),{code:'42501'});
+ await service(()=>scalar('select public.authorize_account_removal($1,$2)',[id,job.token]));
+ await db.query('update auth.users set deleted_at=now(),email=null where id=$1',[target]);
+ await service(()=>finish(id,job.token,true));
+ assert.equal(await scalar('select count(*) from public.listings where id=$1',[listing]),1);
+ await as(owner,async()=>assert.equal(await scalar('select body from public.conversation_messages where id=$1',[message]),'Retained shared message'));
+ assert.equal(await scalar('select status from public.facility_memberships where user_id=$1',[target]),'revoked');
+ assert.equal(await scalar('select display_name from public.profiles where id=$1',[target]),'Removed user');
+ assert.equal(await scalar('select count(*) from public.saved_listings where user_id=$1',[target]),0);
+ assert.equal(await scalar('select count(*) from public.watchlists where user_id=$1',[target]),0);
+ await as(admin,async()=>{const directory=await scalar('select public.admin_user_directory()');assert.ok(!directory.items.some(u=>u.id===target));});
+ await as(target,async()=>assert.equal(await scalar('select public.account_access_enabled()'),false));
+ await assert.rejects(as(admin,()=>begin('enable',target,'','remove@example.test')),{code:'22023'});
+ assert.equal((await begin('remove',target,'','remove@example.test',id)).execute,false);
+});
+
+test('failed or uncertain removals cannot be reenabled or repeated; service rechecks changed target privileges',async()=>{
+ const target=randomUUID(),id=randomUUID();await db.query("insert into auth.users(id,email,email_confirmed_at) values($1,'failure@example.test',now())",[target]);await who(admin);
+ const job=await begin('remove',target,'','failure@example.test',id);
+ await db.query("insert into private.platform_administrators(user_id,bootstrap_reason) values($1,'Concurrent fixture')",[target]);
+ await assert.rejects(service(()=>scalar('select public.authorize_account_removal($1,$2)',[id,job.token])),{code:'42501'});
+ await db.query('delete from private.platform_administrators where user_id=$1',[target]);
+ await service(()=>finish(id,job.token,null));
+ for(const action of['enable','remove','reset'])await assert.rejects(as(admin,()=>begin(action,target,'','failure@example.test')),{code:'22023'});
+ await as(target,async()=>assert.equal(await scalar('select public.account_access_enabled()'),false));
+});
+
+test('Auth removal uses only immutable ID and irreversible soft deletion, with no hard-delete fallback',async()=>{
+ const mock=mockAdmin();mock.auth.admin.deleteUser=async(id,soft)=>{mock.calls.push(['remove',id,soft]);return {data:{user:null},error:null};};await performUserAdminOperation(mock,{action:'remove',targetId:'target',expectedEmail:'current@example.test'},'');assert.deepEqual(mock.calls,[['get','target'],['remove','target',true]]);
+ const failed=mockAdmin();failed.auth.admin.deleteUser=async()=>{throw Error('Storage or network failure');};await assert.rejects(performUserAdminOperation(failed,{action:'remove',targetId:'target',expectedEmail:'current@example.test'},''));assert.equal(failed.calls.length,1);
+});
+
+test('Server Action requires typed removal confirmation and a valid service-only live claim before Auth removal',async()=>{
+ const form=actionForm();form.set('operation','remove');let s=actionContext();await manageUser({},form);assert.equal(s.created,0);
+ form.set('remove_confirmation','owner@example.test');s=actionContext();s.client.rpc=async(name)=>name==='authorize_account_removal'?{error:{code:'42501'}}:{error:null};await manageUser({},form);assert.equal(s.client.calls.length,0);
+});
+
+test('email claims reject disabled, banned, removed and unconfirmed recipients/senders without exposing the private queue',async()=>{
+ for(const mode of['enabled','disabled','banned','removed','unconfirmed']){
+  const user=randomUUID(),email=`${mode}@example.test`;
+  await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[user,email]);
+  const watch=await scalar("insert into public.watchlists(user_id,name,criteria,email_enabled) values($1,'Test alerts','{\"q\":\"supply\"}',true) returning id",[user]);
+  const jobId=await scalar("insert into private.email_jobs(kind,user_id,recipient,watchlist_id,listing_id,payload) values('watchlist',$1,$2,$3,$4,'{}') returning id",[user,email,watch,listing]);
+  if(mode==='disabled')await db.query('insert into private.account_controls(user_id,disabled) values($1,true)',[user]);
+  if(mode==='banned')await db.query("update auth.users set banned_until=now()+interval '1 day' where id=$1",[user]);
+  if(mode==='removed')await db.query('update auth.users set deleted_at=now() where id=$1',[user]);
+  if(mode==='unconfirmed')await db.query('update auth.users set email_confirmed_at=null where id=$1',[user]);
+  const claims=await service(()=>scalar('select public.claim_email_jobs(20)'));
+  assert.equal(claims.some(j=>j.id===jobId),mode==='enabled');
+  assert.equal(await scalar('select state from private.email_jobs where id=$1',[jobId]),mode==='enabled'?'sending':'cancelled');
+ }
+ await denied(owner,'select public.claim_email_jobs(20)');await denied(admin,'select * from private.email_jobs');
+});
+
+test('queued referrals are cancelled when sender access, membership or facility approval changes',async()=>{
+ for(const mode of['disabled','revoked','suspended']){
+  const sender=randomUUID(),referral=randomUUID();await db.query("insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())",[sender,`${mode}-sender@example.test`]);
+  await db.query("insert into public.facility_memberships(facility_id,user_id,role) values($1,$2,'inventory_editor')",[facility,sender]);
+  await db.query("insert into public.facility_referrals(id,user_id,facility_id,recipient_email) values($1,$2,$3,'controlled@example.test')",[referral,sender,facility]);
+  const job=await scalar("insert into private.email_jobs(kind,user_id,recipient,referral_id,payload) values('referral',$1,'controlled@example.test',$2,'{}') returning id",[sender,referral]);
+  if(mode==='disabled')await db.query('insert into private.account_controls(user_id,disabled) values($1,true)',[sender]);
+  if(mode==='revoked')await db.query("update public.facility_memberships set status='revoked' where user_id=$1",[sender]);
+  if(mode==='suspended')await db.query("update public.facilities set status='suspended' where id=$1",[facility]);
+  const claims=await service(()=>scalar('select public.claim_email_jobs(20)'));assert.ok(!claims.some(j=>j.id===job));assert.equal(await scalar('select state from private.email_jobs where id=$1',[job]),'cancelled');
+  if(mode==='suspended')await db.query("update public.facilities set status='approved' where id=$1",[facility]);
+ }
 });

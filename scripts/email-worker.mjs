@@ -1,20 +1,19 @@
-import {createClient} from '@supabase/supabase-js';
-import {deliverEmail} from './email-delivery.mjs';
+import {emailConfiguration,runEmailBatch} from './email-runner.mjs';
 // Default is local configuration inspection ONLY; --execute connects and sends.
-const execute=process.argv.includes('--execute');
-const ready=process.env.H2H_EMAIL_ENABLED==='true' && !!process.env.RESEND_API_KEY && !!process.env.H2H_EMAIL_FROM && !!process.env.SUPABASE_EMAIL_SECRET_KEY && !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SITE_URL;
-if(!execute) {console.log(JSON.stringify({mode:'local configuration check; no service connections or email sends',configured:ready}));}
-else {
- if(!ready) throw new Error('Email delivery disabled or incomplete. Configure server-only email credentials, sender and site URL before execution.');
- const client=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.SUPABASE_EMAIL_SECRET_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
- const config={apiKey:process.env.RESEND_API_KEY,from:process.env.H2H_EMAIL_FROM,siteUrl:process.env.NEXT_PUBLIC_SITE_URL};
- const claim=await client.rpc('claim_email_jobs',{p_limit:20});if(claim.error) throw new Error('Could not claim email jobs. Check migration 011 and worker credentials.');
- for(const job of claim.data??[]) {
-  let providerId=null;
-  try {providerId=await deliverEmail(job,config);}catch {console.error(`Email job ${job.id} was not confirmed; retained for bounded retry.`);}
-  const finish=await client.rpc('finish_email_job',{p_id:job.id,p_token:job.claim_token,p_provider_id:providerId});
-  if(finish.error) throw new Error('Email receipt could not be recorded. A later worker may retry using the same provider idempotency key.');
-  console.log(`Email job ${job.id}: ${providerId ? 'accepted by provider (not proof of inbox delivery)' : 'pending retry'}`);
-  await new Promise(resolve=>setTimeout(resolve,650));
+let config;
+try{config=emailConfiguration(process.env);}catch{ /* Report readiness without values. */ }
+if(!process.argv.includes('--execute')){
+ console.log(JSON.stringify({mode:'local configuration check; no service connections or email sends',configured:!!config}));
+}else{
+ try{
+  if(!config)throw new Error('Email delivery disabled or incomplete. Configure HTTPS URLs, worker credentials and a verified sender.');
+  const {createClient}=await import('@supabase/supabase-js');
+  const client=createClient(config.url,config.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},global:{fetch:(url,options)=>fetch(url,{...options,signal:AbortSignal.timeout(30000)})}});
+  const summary=await runEmailBatch(client,config.delivery);
+  console.log(JSON.stringify(summary));
+  if(summary.retry)process.exitCode=1;
+ }catch{
+  console.error('Email worker could not complete. Check configuration, queue receipts, and provider delivery logs. No unconfirmed send is retried with a new identity.');
+  process.exitCode=1;
  }
 }

@@ -1,0 +1,37 @@
+name: Deliver watchlist and referral emails
+
+on:
+  schedule:
+    - cron: '2-59/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: h2h-email-delivery
+  cancel-in-progress: false
+
+jobs:
+  deliver:
+    if: github.ref == 'refs/heads/main' && vars.H2H_EMAIL_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Send one bounded batch
+        run: node scripts/email-worker.mjs --execute
+        env:
+          H2H_EMAIL_ENABLED: 'true'
+          H2H_EMAIL_FROM: ${{ vars.H2H_EMAIL_FROM }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SUPABASE_EMAIL_SECRET_KEY: ${{ secrets.SUPABASE_EMAIL_SECRET_KEY }}

@@ -1,3 +1,77 @@
+## October 22: automatic watchlist/referral delivery and account removal
+
+The user confirms Supabase SMTP, redirects, password recovery, registration confirmation and manual account invitations work against the hosted project. Those Auth emails are separate from the application email queue below.
+
+### Apply migrations before publishing this release
+
+Apply these in SQL Editor, after 017, in order:
+
+1. **20261022001800_account_removal.sql** ? permanent account-removal controls, directory filtering, service-only removal claim validation and retained business history.
+2. **20261022001900_email_delivery.sql** ? live disabled/removed/banned-account checks when claiming application email jobs.
+
+The implementation does not apply hosted migrations, deploy, configure GitHub secrets or send real emails. Existing SUPABASE_SECRET_KEY remains the server-only credential for administrator account actions. No new public key or SMTP changes are required for removal.
+
+### Turn on automatic delivery (GitHub Actions)
+
+Delivery runs from GitHub, independently of Vercel. This avoids requiring frequent Vercel Cron support on your hosting plan. The workflow runs from main about every five minutes and sends at most 20 eligible queued emails per run. It only runs after the explicit opt-in below. Do not enable it before migrations and the verified sender are ready.
+
+In your GitHub repository, open **Settings ? Secrets and variables ? Actions**.
+
+Under **Secrets**, add these as repository secrets (never paste their values into source code, chat, or repository Variables):
+
+| Secret name | Value |
+| --- | --- |
+| RESEND_API_KEY | Your existing Resend sending API key, authorized for the verified sending domain |
+| SUPABASE_EMAIL_SECRET_KEY | A dedicated Supabase secret key for this worker, mapping to service_role; create it in the existing Supabase project's API key settings |
+
+Under **Variables**, add these repository variables:
+
+| Variable name | Value |
+| --- | --- |
+| H2H_EMAIL_FROM | Hospital2Hospital <info@hospital2hospital.com> |
+| NEXT_PUBLIC_SITE_URL | Your current canonical live HTTPS website origin (no localhost) |
+| NEXT_PUBLIC_SUPABASE_URL | The same existing project URL used by the website |
+| H2H_EMAIL_ENABLED | true ? set this last, when ready to send |
+
+A secret in Vercel or ignored .env.local is not automatically available in GitHub. The worker does not need the ordinary publishable key, the photo key, or the support key.
+
+In **Vercel ? Project ? Settings ? Environment Variables**, set **H2H_EMAIL_ENABLED=true** for Production and redeploy. This enables the watchlist email checkbox and referral form. Vercel does not need the dedicated worker credential for these features; it uses ordinary guarded operations to queue work. Worker secrets remain in GitHub. Local testing of the UI uses the same flag in ignored .env.local; the agent has not edited that file.
+
+After this release is on main, open **GitHub ? Actions ? Deliver watchlist and referral emails ? Run workflow ? main**. A skipped run means the enable variable is absent/false or the selected branch is not main. A green run logs only claimed/accepted/retry counts. Accepted means Resend accepted the request, not guaranteed inbox delivery; inspect Resend's Delivered/Bounced status and the recipient's inbox/spam folder. Errors produce a failed Actions run without exposing recipients/keys/tokens.
+
+The workflow has no pull-request trigger, uses a read-only repository token, serializes runs, and exposes worker credentials only to the sending step. Protect main and limit repository write/Actions secret administration permissions: this worker credential is privileged. Dependency installation disables lifecycle scripts.
+
+GitHub schedules are best effort and can be delayed or dropped under load. Public-repository scheduled workflows can be disabled after 60 days without repository activity. Check Actions periodically and reenable if needed. For tighter delivery guarantees later, move the same worker to a managed scheduler. Reference: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule . No Vercel cron job or public sending endpoint is added.
+
+To pause, set the GitHub H2H_EMAIL_ENABLED variable to false; also set the Vercel flag false and redeploy to hide email options. Disabling the workflow stops future runs; an already in-flight email cannot be recalled. Unsold/unpaused queued jobs expire after 23 hours or five attempts, and are not resurrected automatically. Before enabling a previously used queue, inspect pending jobs in trusted SQL Editor; decide whether they should be cancelled rather than sent. Never requeue sent/ambiguous jobs with a fresh ID. A run claims at most 20 candidate rows, including cancellations/expiry, so a large invalid backlog can take multiple runs to clear.
+
+Read-only operator diagnostics (SQL Editor only):
+
+    select state, count(*), min(created_at) as oldest
+    from private.email_jobs group by state order by state;
+
+Do not expose the private queue to ordinary users. Missing/incorrect settings fail closed. Per-user unsubscribe is the watchlist email checkbox, pause or delete action; claims recheck those controls. There is no promotional mailing list, conversation-email alert, or support-email notification in this release.
+
+### Account removal semantics
+
+In **Facilitator Dashboard ? Users ? Manage account**, choose **Permanently remove account**. Enter the target email exactly, provide the required audit reason, check confirmation, and use the red removal button. All checks execute on the server and database, including direct API attempts. Self-removal and active platform administrator removal are prohibited. An account owning any facility cannot be removed until a trusted operator transfers that ownership and matching memberships; this release does not add an ownership-transfer UI. Use Disable for reversible restrictions.
+
+The action first commits a permanent pending-removal access block, then rechecks its exact privileged journal claim and calls Supabase Auth deleteUser(id, true) server-side. This is irreversible Auth soft deletion: it removes authentication identity while retaining the UUID row required by facility inventory, messages, support and audit foreign keys. It is not hard deletion or a promise to erase every historical business record. On confirmed success, revoke memberships, label the profile Removed user, remove avatar/personal saves/watchlists and cancel pending application emails. Hide removed accounts from the active user directory; retain audit records and shared facility/listing/conversation/support history and objects. No unrelated Storage objects are deleted. Official behavior: https://supabase.com/docs/reference/javascript/auth-admin-deleteuser .
+
+Auth and database changes cannot share a transaction. Any failed/uncertain removal remains blocked, cannot be enabled/retried from the UI, and requires reconciliation in the trusted SQL Editor plus Supabase Auth. Check the audit request ID and actual Auth deleted_at. If Auth soft deletion completed, finish that exact existing claim with the service-only finalizer after verifying the outcome; never issue a hard-delete fallback or create another removal identity. If Auth did not complete, investigate the reason (including Storage ownership constraints) and use a reviewed operator recovery/retry of the original request. Do not clear controls blindly. Operator role/ownership changes must not race with requested/uncertain account actions; check the audit before making such changes. Existing signed image URLs may remain usable until their short expiry.
+
+### Manual live checklist after setup
+
+1. Create a watchlist with email enabled for an exact test catalog number. Publish a new matching active listing from an approved facility; verify one match and one queued job. Run the workflow, confirm a single delivered email, correct live listing link, and expected counts. Editing/repeated reactivation must not send duplicates.
+2. Pause/uncheck/delete a watch before a new queued job is claimed; verify cancellation. Repeat with sold/deactivated stock, suspended seller and disabled recipient. A claimed/in-flight message may already be accepted and cannot be recalled.
+3. From an eligible approved facility, refer a controlled test address. Verify the correct inviter/facility, registration link and no automatic membership/administrator grant. Retry the same submission and check only one email. Verify limits and revoked/suspended sender cancellation.
+4. Simulate a provider failure only in a controlled test environment; verify a failed Actions run, bounded retry and stable Resend idempotency. Check lease recovery after interruption and inspect provider receipt before manual reconciliation. Never send test mail to uncontrolled recipients.
+5. Invite a disposable nonadministrator account, log in in a second browser, give it an editor/viewer membership and personal saves/watchlist, then remove it through Users. Verify the directory entry disappears, login/refresh/old-JWT table/RPC/Storage access is denied, membership is revoked, and shared inventory/messages/support remain. Confirm the old account cannot be enabled. The original email may register a new independent account; it receives no inherited memberships or saves.
+6. Verify ordinary/anonymous users cannot remove accounts; direct requests cannot remove self, other administrators or facility owners, bypass typed confirmation, forge target email or claim, or repeat an unresolved operation. Test Auth failure with mocks first; live failure reconciliation requires a trusted operator.
+
+Local automated verification is recorded in CODEX.md. It uses actual SQL/RLS in PGlite and mocked Auth/provider operations, not live email delivery, GitHub scheduling or hosted Auth soft-deletion/Storage constraints.
+
+
 # Supabase account and inventory setup
 
 Phase 1 provides confirmed-email accounts, facility onboarding, selection and platform approval. Phase 2 adds reference products, inventory, search and saves. Phase 3 adds private listing photos and facility conversations. No remote migrations, reference imports, or deployment have been performed against your hosted project.

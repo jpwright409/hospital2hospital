@@ -12,7 +12,8 @@ export async function manageUser(_state:ActionState,form:FormData):Promise<Actio
  const field=(key:string)=>String(form.get(key)??"").trim();
  const id=field("request_id"),action=field("operation"),targetId=field("user_id")||null;
  const email=field("email").toLowerCase(),expectedEmail=field("expected_email").toLowerCase(),name=field("name"),reason=field("reason");
- if(form.get("confirm")!=="yes"||!validUuid(id)||!['invite','email','disable','enable','reset'].includes(action)||(targetId&&!validUuid(targetId)))return {error:"Choose an account action and confirm the request."};
+ if(form.get("confirm")!=="yes"||!validUuid(id)||!['invite','email','disable','enable','reset','remove'].includes(action)||(targetId&&!validUuid(targetId)))return {error:"Choose an account action and confirm the request."};
+ if(action==='remove'&&field('remove_confirmation').toLowerCase()!==expectedEmail)return {error:"Type the account's email address to confirm permanent removal."};
  let admin:ReturnType<typeof createUserAdmin>;
  try{admin=createUserAdmin();}catch(e){return {error:(e as Error).message};}
  const begin=await supabase.rpc("begin_account_admin_action",{p_id:id,p_action:action,p_target:targetId,p_email:email,p_name:name,p_expected_email:expectedEmail,p_reason:reason});
@@ -22,13 +23,17 @@ export async function manageUser(_state:ActionState,form:FormData):Promise<Actio
  try{
   const permission=await supabase.rpc("is_platform_administrator");
   if(permission.error||permission.data!==true)throw new Error("Administrator access changed. Nothing further was requested.");
+  if(action==='remove'){
+   const permission=await admin.rpc("authorize_account_removal",{p_id:id,p_token:token});
+   if(permission.error)throw new Error("Account removal permission changed. Refresh and check the audit.");
+  }
   // From this point a network failure may have an uncertain external outcome.
   success=null;
   const createdId=await performUserAdminOperation(admin,{action,targetId,email,expectedEmail,name},`${getSiteUrl()}/auth/accept-account`);
   const finished=await admin.rpc("finish_account_admin_action",{p_id:id,p_token:token,p_success:true,p_created_user:createdId});
   if(finished.error)throw new Error("Account operation may have completed but the audit could not be finalized.");
   success=true;revalidatePath("/admin/users");
-  return {success:action==='invite'?"Account invitation requested. The recipient must accept it and set their password. No facility membership or platform role was granted.":action==='reset'?"Password reset email requested for the account's current verified address.":action==='disable'?"Account disabled. Existing authenticated application/database access is blocked.":action==='enable'?"Account enabled. The user may sign in again.":"Login email updated administratively. Ask the account owner to sign in with the new address."};
+  return {success:action==='remove'?"Account permanently removed. Shared facility records and conversation history were retained.":action==='invite'?"Account invitation requested. The recipient must accept it and set their password. No facility membership or platform role was granted.":action==='reset'?"Password reset email requested for the account's current verified address.":action==='disable'?"Account disabled. Existing authenticated application/database access is blocked.":action==='enable'?"Account enabled. The user may sign in again.":"Login email updated administratively. Ask the account owner to sign in with the new address."};
  }catch{
   if(success!==true)await admin.rpc("finish_account_admin_action",{p_id:id,p_token:token,p_success:success,p_created_user:null});
   revalidatePath("/admin/users");

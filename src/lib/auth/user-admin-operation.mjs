@@ -2,7 +2,7 @@
 // target protection and idempotency must be authorized by the audit RPC first.
 export async function performUserAdminOperation(admin, operation, redirectTo) {
  const {action,targetId,email,expectedEmail,name}=operation;
- if(!['invite','email','disable','enable','reset'].includes(action))throw new Error('Unsupported account action.');
+ if(!['invite','email','disable','enable','reset','remove'].includes(action))throw new Error('Unsupported account action.');
  if(action==='invite'){
   const result=await admin.auth.admin.inviteUserByEmail(email,{data:{display_name:name},redirectTo});
   if(result.error)throw result.error;
@@ -13,7 +13,13 @@ export async function performUserAdminOperation(admin, operation, redirectTo) {
  if(current.error)throw current.error;
  const user=current.data?.user;
  if(user?.id!==targetId||user.email?.toLowerCase()!==expectedEmail)throw new Error('Account changed. Refresh before retrying.');
- if(action==='reset'){
+ if(action==='remove'){
+  // Soft removal is irreversible but retains IDs referenced by shared history.
+  const result=await admin.auth.admin.deleteUser(targetId,true);
+  if(result.error)throw result.error;
+  // Auth may return an empty success body. The service-only finalizer verifies
+  // deleted_at in the database before recording success or clearing personal data.
+ }else if(action==='reset'){
   if(!user.email_confirmed_at||Date.parse(user.banned_until??'')>Date.now())throw new Error('Reset requires a confirmed, enabled account.');
   const result=await admin.auth.resetPasswordForEmail(user.email,{redirectTo});if(result.error)throw result.error;
  }else{
