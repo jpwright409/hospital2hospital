@@ -43,7 +43,7 @@ export function WelcomeMarketplace(){
   }
   frame=requestAnimationFrame(advance);return()=>cancelAnimationFrame(frame);
  },[paused,reduced,items.length]);
- return <div className="welcome-showcase">
+ return <div className="welcome-showcase" id="what-is-h2h">
   <p className="welcome-mission">Hospital2Hospital connects hospitals and surgery centers to share surplus surgical supplies and equipment, reduce waste, and lower costs.</p>
   <section className="welcome-listings" aria-labelledby="welcome-listings-title">
    <div className="welcome-section-heading"><h2 id="welcome-listings-title">A look inside the marketplace</h2>{items.length>1&&!reduced&&<button className="button secondary" type="button" onClick={()=>setPaused(v=>!v)} aria-pressed={paused}>{paused?'Resume scrolling':'Pause scrolling'}</button>}</div>
@@ -54,6 +54,6 @@ export function WelcomeMarketplace(){
     </div>
    </>}
   </section>
-  <section className="welcome-overview" aria-labelledby="welcome-overview-title"><h2 id="welcome-overview-title">A better connection for your facility</h2><p>Hospital2Hospital is a free, facility-to-facility marketplace for excess surgical supplies and equipment. Find inventory from approved facilities, give surplus supplies a second life, and coordinate directly through private facility conversations.</p><nav aria-label="Explore Hospital2Hospital resources"><Link href="/cost-savings">Cost Savings</Link><Link href="/our-partners#dme-partners">DME Partners</Link><Link href="/our-partners#charity-partners">Charity Partners</Link></nav></section>
+  <section className="welcome-overview" aria-labelledby="welcome-overview-title"><h2 id="welcome-overview-title">A better connection for your facility</h2><p>Hospital2Hospital is a free, facility-to-facility marketplace for excess surgical supplies and equipment. Find inventory from approved facilities, give surplus supplies a second life, and coordinate directly through private facility conversations.</p><nav aria-label="Explore Hospital2Hospital resources"><Link href="/cost-savings">Cost Savings</Link><Link href="/our-partners#dme-partners">DME Partners</Link><Link href="/our-partners#charity-partners">Charity Partners</Link></nav><Link className="button primary welcome-get-started" href="https://www.hospital2hospital.com/?welcome=register">Ready to Get Started?</Link></section>
  </div>;
 }

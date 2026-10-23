@@ -1,3 +1,9 @@
+## October 23: welcome registration CTA and scroll cue (release authorized)
+
+Added Ready to Get Started? below the three overview resource links, targeting the exact requested https://www.hospital2hospital.com/?welcome=register URL. Added a small What is H2H? card with a downward arrow to the right of the existing centered login card on desktop; below 940px it moves below the login card. It links to #what-is-h2h at the mission/carousel section, with accessible text and existing brand colors. Register/forgot/resend welcome variants do not show this cue. No auth, inventory, API, migration or environment changes.
+
+All 155 automated tests, lint and production build passed. Local Chrome with intercepted fictional preview responses verified exact CTA text/URL, desktop-right/mobile-below placement, working anchor, no horizontal overflow, and existing carousel/reduced-motion/error/recovery behavior. No forms submitted and no live mutations. User explicitly authorized publication/deployment; verify latest main/Vercel status when resuming. Previous production release was 8eedab4.
+
 ## October 23: informational signed-out homepage (release authorized)
 
 The connected signed-out root retains the full logo/login card and now renders WelcomeMarketplace below it: a one-sentence mission, full-width slow-scrolling public listing preview, a concise marketplace overview and Cost Savings/DME Partners/Charity Partners links. The register/forgot/resend cards reached through ?welcome remain focused on their original form; authenticated Marketplace redirects and all authentication flows are preserved. No demo inventory is rendered in this connected preview.
