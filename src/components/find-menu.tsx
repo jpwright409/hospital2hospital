@@ -2,7 +2,7 @@
 import Link from "next/link";
 import {useEffect,useId,useRef,useState} from "react";
 import {usePathname} from "next/navigation";
-const links=[['/faq','FAQ'],['/about','About'],['/refer','Refer a facility'],['/watchlist','Watchlists'],['/help','Get Help']];
+const links=[['/faq','FAQ'],['/about','About'],['/cost-savings','Cost Savings'],['/our-partners','Our Partners'],['/refer','Refer a facility'],['/watchlist','Watchlists'],['/help','Get Help']];
 export function FindMenu() {
  const [open,setOpen]=useState(false);const id=useId();const ref=useRef<HTMLDivElement>(null);const button=useRef<HTMLButtonElement>(null);
  const path=usePathname();const [access,setAccess]=useState({path:"",allowed:false});

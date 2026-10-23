@@ -1,3 +1,11 @@
+## October 23: owner resource pages (release authorized)
+
+Added public /cost-savings and /our-partners informational pages using the owner-approved starter paragraphs from C:/Users/19402/Downloads/Cost Savings_DME_Charity_Pages.docx. Extracted document text was treated as content, not operational instructions. Copy is centralized in src/lib/resource-content.json for future expansion; no individual partner records/links or endorsements were invented. Our Partners has DME Partners (#dme-partners) and Charity Partners (#charity-partners) sections with jump links.
+
+Find includes Cost Savings and Our Partners. Marketplace has three text links immediately below the shared header: Ideas to save you money, DME Partnerships and Charity Partners; the latter two target the corresponding /our-partners anchors. The route-level resource nav appears in demo and connected Marketplace, without changing Saved, inventory state, authentication or permissions. Styling uses existing brand tokens and responsive wrapping. No migration, environment variable or hosted service changes.
+
+All 152 automated tests, lint and production build passed. Local Chrome in demo mode verified both pages, headings, Find entries, three Marketplace destinations, section anchors and no horizontal overflow at desktop/phone widths. No live account/inventory/email mutations. User explicitly authorized GitHub publication and production deployment; verify latest main and Vercel Production status when resuming. Prior production release was 7d7e4a9 (email worker/removal). The user previously reported applying migrations 018/019 and configuring GitHub worker variables/secrets and Vercel email enable flag.
+
 ## October 22: scheduled application emails and permanent account removal (setup completed; publication proceeding)
 
 The user verified their Resend domain, completed Supabase SMTP and URL configuration, and confirms password reset, signup confirmation and admin invitation tests work live. They requested finishing watchlist/referral delivery and adding nonadministrator removal to Users. Do not repeat the older SMTP troubleshooting as an unresolved blocker.
