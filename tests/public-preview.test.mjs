@@ -13,9 +13,10 @@ function client({items=[listing],queryError=null,photoError=null,signError=null}
 test('public preview uses a fixed active/public query, bounded size and narrow safe projection',async()=>{
  const mock=client();const items=await publicListingPreview(mock);
  assert.deepEqual(mock.calls[0],['rpc','search_inventory_v2',{p_query:'',p_sort:'newest',p_page:1,p_page_size:12,p_facility_id:null,p_saved:false,p_status:'active'}]);
- assert.deepEqual(items,[{id:'public-listing',name:'Public supply',manufacturer:'Reference brand',catalogNumber:'CAT-1',priceUsd:12,quantityUnit:'box',negotiable:false,facilityName:'Approved public facility',location:'Austin, TX',photoUrl:'https://photos.example.test/signed-cover'}]);
+ assert.deepEqual(items,[{id:'public-listing',name:'Public supply',manufacturer:'Reference brand',catalogNumber:'CAT-1',priceUsd:12,quantityUnit:'box',negotiable:false,facilityName:'Approved public facility',location:'TX',photoUrl:'https://photos.example.test/signed-cover'}]);
  assert.deepEqual(mock.calls.find(c=>c[0]==='sign'),['sign','listing-photos',['internal-cover.webp'],60]);
  assert.ok(!JSON.stringify(items).includes('internal-cover.webp'));assert.ok(!JSON.stringify(items).includes('must-not-be-exposed'));
+ assert.ok(!JSON.stringify(items).includes('Austin'));
  assert.equal((await publicListingPreview(client({items:Array(15).fill(listing)}))).length,12);
 });
 

@@ -17,6 +17,6 @@ export async function publicListingPreview(client) {
  }
  return listings.map(l=>({id:l.id,name:l.name,manufacturer:l.manufacturer,catalogNumber:l.catalog_number,
   priceUsd:l.price_usd,quantityUnit:l.quantity_unit,negotiable:l.price_negotiable,
-  facilityName:l.facility.name,location:[l.facility.city,l.facility.state].filter(Boolean).join(', '),
+  facilityName:l.facility.name,location:l.facility.state,
   photoUrl:urls.get(covers.get(l.id))??null}));
 }

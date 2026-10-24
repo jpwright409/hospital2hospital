@@ -161,6 +161,31 @@
 .welcome-learn-card:hover{background:var(--brand-pale-aqua);box-shadow:var(--shadow)}
 .welcome-showcase{scroll-margin-top:24px}
 .welcome-get-started{margin-top:26px}
+
+/* Fixed inventory cards reserve exactly two title lines, including short titles. */
+.listing-grid>div{min-width:0}
+.listing-card{display:grid;grid-template-rows:205px minmax(0,1fr);height:490px}
+.listing-card .card-image{min-height:0}
+.listing-card .card-image .listing-photo,.listing-card .card-image .product-art{height:205px}
+.listing-card .card-body{display:grid;grid-template-rows:12px 42px 15px minmax(72px,1fr) 20px 42px;gap:8px;padding:18px 18px 0;min-width:0;min-height:0}
+.listing-card .card-body>.eyebrow{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:12px}
+.listing-card .card-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;height:42px;min-height:42px;overflow:hidden;overflow-wrap:anywhere;line-height:21px;margin:0}
+.listing-card .catalog{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:15px;margin:0}
+.listing-card .card-quantity{display:grid;grid-template-columns:minmax(0,1fr) 66px;gap:10px;align-items:start;margin:0;min-width:0}
+.listing-card .card-quantity>div,.listing-card .card-quantity>strong{min-width:0;overflow-wrap:anywhere}
+.listing-card .card-price-line{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.listing-card .card-price-line strong{font-size:16px;line-height:24px;overflow-wrap:anywhere}
+.listing-card .card-price-unit{display:block;font-size:10px;line-height:16px;color:var(--muted);margin-top:4px}
+.listing-card .card-quantity>span{font-size:10px;line-height:16px;overflow-wrap:anywhere}
+.listing-card .card-package{font-size:11px;line-height:20px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.listing-card .card-location{display:grid;grid-template-columns:15px 28px minmax(0,1fr);align-items:center;gap:5px;padding:0;font-size:10px;min-width:0}
+.listing-card .card-location>.card-state{margin:0;font-size:10px}
+.listing-card .card-location>.card-facility{font-size:9px;margin:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(min-width:801px) and (max-width:1100px){.listing-card .card-quantity{grid-template-columns:1fr;gap:4px;align-content:start}}
+.listing-detail .catalog{overflow-wrap:anywhere}
+.welcome-preview-copy h3{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;height:46.4px;overflow:hidden}
+.welcome-preview-maker,.welcome-preview-catalog{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.welcome-preview-facility{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:940px){.welcome-learn-card{position:static;transform:none;width:180px;margin:18px auto 0;padding:15px;gap:8px}}
 @media(max-width:500px){.welcome-showcase{margin:36px -18px 0}.welcome-mission{font-size:17px}.welcome-section-heading{padding-inline:20px;align-items:flex-start}.welcome-section-heading h2{font-size:21px}.welcome-scroll-hint{padding-inline:20px}.welcome-listing-rail{padding-inline:20px}.welcome-preview-card{flex-basis:260px}.welcome-overview h2{font-size:23px}}
 @media(max-width:600px){.marketplace-resource-links{gap:8px 20px;font-size:12px}.resource-section{padding:22px}.resource-section h2{font-size:22px}.resource-section p{font-size:14px}}

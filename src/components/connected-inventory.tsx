@@ -1,3 +1,4 @@
+import {InventoryCard as Card} from "./inventory-card";
 import Link from "next/link";
 import {WizardSetupDrafts} from "./wizard-draft-list";
 import { randomUUID } from "node:crypto";
@@ -11,15 +12,12 @@ import { SavedAction, StatusAction, InventoryEditor, DeleteAction } from "./inve
 import { loadAccount, requireUser, serviceError } from "@/lib/auth/server";
 import { createClient } from "@/lib/supabase/server";
 import { catalogProducts, getInventoryListing, inventoryFilters, searchInventory, inventoryError } from "@/lib/inventory/server";
-import { inventoryUrl, parseInventoryQuery, type InventoryListing, type InventoryQuery, type SearchParams } from "@/lib/inventory/types";
+import { inventoryUrl, parseInventoryQuery, type InventoryQuery, type SearchParams } from "@/lib/inventory/types";
 import { listingPhotos,type ListingPhoto } from "@/lib/photos/server";
-import { ListingVisual,PhotoManager } from "./listing-photos";
+import { PhotoManager } from "./listing-photos";
 import { ContactSeller } from "./conversations";
 import { ListingDetailView } from "./listing-detail";
 const money = (value: number) => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(value);
-function Card({listing}: {listing: InventoryListing}) {
-  return <article className="listing-card"><div className="card-image"><Link href={`/listings/${listing.id}`} tabIndex={-1} aria-hidden="true"><ListingVisual photos={listing.photos ?? []} name={listing.name}/></Link><span className="condition-tag">{listing.condition}</span></div><div className="card-body"><span className="eyebrow">{listing.manufacturer}</span><Link className="card-title" href={`/listings/${listing.id}`}>{listing.name}</Link><p className="catalog">CAT # <strong>{listing.catalog_number}</strong></p><div className="card-quantity"><strong>{money(listing.price_usd)}{listing.price_negotiable && <span className="badge">Negotiable</span>}<small> / {listing.quantity_unit} · USD</small></strong><span>{listing.quantity} {listing.quantity_unit} available</span></div><p className="muted">{listing.units_per_package} item(s) per {listing.quantity_unit}</p><div className="card-location"><Icon name="pin" size={15}/>{listing.facility.city}, {listing.facility.state}<span>{listing.facility.name}</span></div></div></article>;
-}
 function Pagination({query,total,path}: {query: InventoryQuery; total: number; path: string}) {
   const pages = Math.max(1,Math.ceil(total/12));
   return <nav className="inventory-pagination" aria-label="Inventory pages">{query.page>1 && <Link className="button secondary" href={inventoryUrl(path,query,query.page-1)}>Previous</Link>}<span>Page {query.page} of {pages} · {total} results</span>{query.page<pages && <Link className="button secondary" href={inventoryUrl(path,query,query.page+1)}>Next</Link>}</nav>;

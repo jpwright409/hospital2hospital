@@ -33,7 +33,7 @@ export function ListingDetailView({listing,photos,children}:{listing:InventoryLi
         <div className="listing-asking-price"><strong>{new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(listing.price_usd)}</strong><span>/ {listing.quantity_unit} · USD</span>{listing.price_negotiable&&<span className="badge">Negotiable</span>}</div>
         <p className="listing-availability">{listing.quantity} {listing.quantity_unit} available · {listing.units_per_package} item(s) per {listing.quantity_unit}</p>
         <span className="badge listing-status">{listing.status}</span>
-        <div className="seller-info listing-facility"><h3>{listing.facility.name}</h3><p>{listing.facility.city}, {listing.facility.state}</p></div>
+        <div className="seller-info listing-facility"><h3>{listing.facility.name}</h3><p>{listing.facility.state}</p></div>
         <div className="listing-contact-actions">{children}</div>
       </section>
     </div>
