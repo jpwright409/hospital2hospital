@@ -13,7 +13,7 @@ const denied=(user,sql,args=[],role)=>assert.rejects(as(user,()=>db.query(sql,ar
 const begin=(action,target=owner,email='',expected='owner@example.test',id=randomUUID(),name='',note=reason)=>scalar('select public.begin_account_admin_action($1,$2,$3,$4,$5,$6,$7)',[id,action,target,email,name,expected,note]);
 const finish=(id,token,success,created=null)=>scalar('select public.finish_account_admin_action($1,$2,$3,$4)',[id,token,success,created]);
 before(async()=>{
- await db.exec(`create role anon nologin;create role authenticated nologin;create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,banned_until timestamptz,deleted_at timestamptz,raw_user_meta_data jsonb default '{}');create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);await installStorageContract(db);
+ await db.exec(`create role anon nologin;create role authenticated nologin;create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,banned_until timestamptz,deleted_at timestamptz,raw_user_meta_data jsonb default '{}');create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);await db.exec('alter table auth.users add column created_at timestamptz default now(),add column last_sign_in_at timestamptz');await installStorageContract(db);
  for(const f of(await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL('../supabase/migrations/'+f,import.meta.url),'utf8'));
  for(const [id,email,confirmed]of[[admin,'admin@example.test',true],[conner,'conner@babursolutions.com',true],[owner,'owner@example.test',true],[other,'other@example.test',true],[unconfirmed,'pending@example.test',false]])await db.query("insert into auth.users(id,email,email_confirmed_at) values($1,$2,case when $3 then now() else null end)",[id,email,confirmed]);
  await db.query("insert into private.platform_administrators(user_id,bootstrap_reason) values($1,'Local admin fixture')",[admin]);
@@ -83,14 +83,14 @@ test('manual user invitation never sets a password, email confirmation, platform
 const mockKey=Symbol.for('h2h.user-admin-action-test');
 const ts=await import('typescript');
 const dataModule=source=>'data:text/javascript;base64,'+Buffer.from(source).toString('base64');
-const mockAuth=dataModule(`export async function requirePlatformAdministrator(){const s=globalThis[Symbol.for('h2h.user-admin-action-test')];if(s.deny)throw Error('Administrator required');return {supabase:{rpc:async(name)=>{s.rpcCalls.push(name);return name==='begin_account_admin_action'?s.begin:{data:s.livePermission,error:null};}}};}export function serviceError(){return 'Denied or unavailable';}`);
+const mockAuth=dataModule(`export async function requirePlatformAdministrator(){const s=globalThis[Symbol.for('h2h.user-admin-action-test')];s.authorizations=(s.authorizations??0)+1;if(s.deny||(s.denyAfter&&s.authorizations>s.denyAfter))throw Error('Administrator required');return {supabase:{rpc:async(name)=>{s.rpcCalls.push(name);return name==='begin_account_admin_action'||name==='begin_account_bulk_item'?s.begin:{data:s.livePermission,error:null};}}};}export function serviceError(){return 'Denied or unavailable';}`);
 const mockClient=dataModule(`export function createUserAdmin(){const s=globalThis[Symbol.for('h2h.user-admin-action-test')];s.created++;return s.client;}`);
 const mockCache=dataModule('export function revalidatePath(){}');
 const mockMode=dataModule('export function getSiteUrl(){return "https://example.test";}');
 const mockPolicy=dataModule('export function validUuid(v){return /^[0-9a-f-]{36}$/i.test(v);}');
 let actionSource=await readFile(new URL('../src/app/user-admin-actions.ts',import.meta.url),'utf8');
-for(const [from,to]of[['next/cache',mockCache],['@/lib/auth/server',mockAuth],['@/lib/supabase/user-admin',mockClient],['@/lib/app-mode',mockMode],['@/lib/auth/policy',mockPolicy],['@/lib/auth/user-admin-operation.mjs',new URL('../src/lib/auth/user-admin-operation.mjs',import.meta.url).href]])actionSource=actionSource.replace(JSON.stringify(from),JSON.stringify(to));
-const {manageUser}=await import(dataModule(ts.default.transpileModule(actionSource,{compilerOptions:{module:ts.default.ModuleKind.ESNext,target:ts.default.ScriptTarget.ES2022}}).outputText));
+for(const [from,to]of[['next/cache',mockCache],['@/lib/auth/server',mockAuth],['@/lib/supabase/user-admin',mockClient],['@/lib/app-mode',mockMode],['@/lib/auth/policy',mockPolicy],['@/lib/auth/user-admin-operation.mjs',new URL('../src/lib/auth/user-admin-operation.mjs',import.meta.url).href],['@/lib/auth/bulk-users.mjs',new URL('../src/lib/auth/bulk-users.mjs',import.meta.url).href]])actionSource=actionSource.replace(JSON.stringify(from),JSON.stringify(to));
+const {manageUser,bulkManageUsers}=await import(dataModule(ts.default.transpileModule(actionSource,{compilerOptions:{module:ts.default.ModuleKind.ESNext,target:ts.default.ScriptTarget.ES2022}}).outputText));
 function actionContext(overrides={}){const client=mockAdmin({id:owner,email:'owner@example.test',email_confirmed_at:'2026-10-21'});const finishes=[];client.rpc=async(name,args)=>{finishes.push([name,args]);return {error:null};};const s={deny:false,created:0,client,finishes,rpcCalls:[],livePermission:true,begin:{data:{execute:true,token:randomUUID()},error:null},...overrides};globalThis[mockKey]=s;return s;}
 function actionForm(){const f=new FormData();for(const [k,v]of Object.entries({request_id:randomUUID(),operation:'disable',user_id:owner,expected_email:'owner@example.test',reason,confirm:'yes'}))f.set(k,v);return f;}
 test('Server Action rejects nonadministrators before creating or using a privileged Auth client',async()=>{
@@ -187,4 +187,60 @@ test('queued referrals are cancelled when sender access, membership or facility 
   const claims=await service(()=>scalar('select public.claim_email_jobs(20)'));assert.ok(!claims.some(j=>j.id===job));assert.equal(await scalar('select state from private.email_jobs where id=$1',[job]),'cancelled');
   if(mode==='suspended')await db.query("update public.facilities set status='approved' where id=$1",[facility]);
  }
+});
+
+test('filtered compact directory is platform-only, paginated and excludes removed accounts while exposing review metadata',async()=>{
+ for(const user of[owner,other,unconfirmed])await denied(user,"select public.admin_user_directory_v2('',1,'all')");await denied(null,"select public.admin_user_directory_v2('',1,'all')",[],'anon');
+ for(let i=0;i<23;i++)await db.query("insert into auth.users(id,email,email_confirmed_at,created_at) values($1,$2,case when $3 then now() else null end,'2026-10-31'::timestamptz+$4*interval '1 minute')",[randomUUID(),`directory-${i}@example.test`,i%2===0,i]);
+ await as(admin,async()=>{
+  const page1=await scalar("select public.admin_user_directory_v2('directory-',1,'all')"),page2=await scalar("select public.admin_user_directory_v2('directory-',2,'all')");assert.equal(page1.total,23);assert.equal(page1.items.length,20);assert.equal(page2.items.length,3);assert.equal(page1.items[0].email,'directory-22@example.test');assert.equal(new Set([...page1.items,...page2.items].map(u=>u.id)).size,23);
+  const confirmed=await scalar("select public.admin_user_directory_v2('directory-',1,'confirmed')"),unconfirmed=await scalar("select public.admin_user_directory_v2('directory-',1,'unconfirmed')");assert.ok(confirmed.items.every(u=>u.email_confirmed_at));assert.ok(unconfirmed.items.every(u=>!u.email_confirmed_at));assert.equal(confirmed.total+unconfirmed.total,23);
+  const owned=await scalar("select public.admin_user_directory_v2('owner@example.test',1,'all')");assert.equal(owned.items[0].facility_owner,true);assert.equal(owned.items[0].facility_count,1);
+  const unresolved=await scalar("select public.admin_user_directory_v2('failure@example.test',1,'disabled')");assert.equal(unresolved.items[0].action_pending,true);
+  const removed=await scalar("select public.admin_user_directory_v2('remove@example.test',1,'all')");assert.equal(removed.total,0);
+ });
+ await assert.rejects(as(admin,()=>scalar("select public.admin_user_directory_v2('',1,'forged')")),{code:'22023'});
+});
+
+test('bulk item RPC rechecks live administrator/owner/target protections and preserves per-user idempotency',async()=>{
+ const args=[randomUUID(),'disable',owner,'owner@example.test',reason],sql='select public.begin_account_bulk_item($1,$2,$3,$4,$5)';
+ for(const user of[owner,other,null])await denied(user,sql,args,user===null?'anon':undefined);
+ for(const target of[admin,conner])await denied(admin,sql,[randomUUID(),'reset',target,target===admin?'admin@example.test':'conner@babursolutions.com',reason]);
+ await assert.rejects(as(admin,()=>scalar(sql,[randomUUID(),'remove',owner,'owner@example.test',reason])),{code:'22023'});
+ await assert.rejects(as(admin,()=>scalar(sql,[randomUUID(),'enable',owner,'owner@example.test',reason])),{code:'22023'});
+ const target=await scalar("select id from auth.users where email='directory-0@example.test'");
+ await assert.rejects(as(admin,()=>scalar(sql,[randomUUID(),'disable',target,'forged@example.test',reason])),{code:'22023'});
+ await as(admin,async()=>{const id=randomUUID(),args=[id,'disable',target,'directory-0@example.test',reason];assert.equal((await scalar(sql,args)).execute,true);assert.equal((await scalar(sql,args)).execute,false);await who(target);assert.equal(await scalar('select public.account_access_enabled()'),false);await who(admin);});
+ await as(admin,async()=>{const accounts=[...(await scalar("select public.admin_user_directory_v2('directory-',1,'all')")).items,...(await scalar("select public.admin_user_directory_v2('directory-',2,'all')")).items];for(const user of accounts)assert.equal((await scalar(sql,[randomUUID(),'disable',user.id,user.email,reason])).execute,true);});
+});
+
+test('non-email cleanup has a bounded 200/hour ceiling while email/identity actions retain their 20/hour limit',async()=>{
+ await who(null);await db.query("insert into private.account_admin_audit(id,actor_id,action,email,reason,state) select gen_random_uuid(),$1,'disable','','Bulk limit fixture','failed' from generate_series(1,200)",[admin]);
+ const target=await scalar("select id from auth.users where email='directory-0@example.test'");
+ await assert.rejects(as(admin,()=>scalar('select public.begin_account_bulk_item($1,$2,$3,$4,$5)',[randomUUID(),'disable',target,'directory-0@example.test',reason])),{code:'22023'});
+ await db.exec("delete from private.account_admin_audit where reason='Bulk limit fixture'");
+});
+
+function bulkForm(operation='disable',targets=[{id:owner,email:'owner@example.test',requestId:randomUUID()}]){const form=new FormData();for(const[k,v]of Object.entries({operation,targets:JSON.stringify(targets),reason,confirm:'yes',remove_confirmation:'REMOVE'}))form.set(k,v);return form;}
+test('bulk Server Action authenticates before selection parsing and rejects oversized/unconfirmed destructive requests',async()=>{
+ let s=actionContext({deny:true});await assert.rejects(bulkManageUsers({},bulkForm()),/Administrator required/);assert.equal(s.created,0);
+ s=actionContext();const form=bulkForm('remove');form.set('remove_confirmation','');assert.ok((await bulkManageUsers({},form)).error);assert.equal(s.created,0);
+ const oversized=Array.from({length:21},()=>({id:randomUUID(),email:'controlled@example.test',requestId:randomUUID()}));assert.ok((await bulkManageUsers({},bulkForm('disable',oversized))).error);assert.equal(s.created,0);
+});
+
+test('bulk Server Action uses guarded per-item reservations, never replays duplicates, and reports partial outcomes',async()=>{
+ let s=actionContext({begin:{data:{execute:false,state:'succeeded'},error:null}});let result=await bulkManageUsers({},bulkForm());assert.equal(result.results.length,1);assert.equal(s.client.calls.length,0);assert.ok(s.rpcCalls.includes('begin_account_bulk_item'));
+ s=actionContext();const targets=[{id:owner,email:'owner@example.test',requestId:randomUUID()},{id:randomUUID(),email:'changed@example.test',requestId:randomUUID()}];result=await bulkManageUsers({},bulkForm('disable',targets));assert.ok(result.results[0].success);assert.ok(result.results[1].error);assert.equal(s.finishes.length,2);assert.equal(s.finishes[1][1].p_success,null);assert.equal(s.client.calls.filter(c=>c[0]==='update').length,1);
+});
+
+test('bulk resets reject unconfirmed and Auth-banned targets before any email operation',async()=>{
+ const pending=await scalar("select id from auth.users where email='directory-1@example.test'"),confirmed=await scalar("select id from auth.users where email='directory-0@example.test'");
+ const sql='select public.begin_account_bulk_item($1,$2,$3,$4,$5)';
+ await assert.rejects(as(admin,()=>scalar(sql,[randomUUID(),'reset',pending,'directory-1@example.test',reason])),{code:'22023'});
+ await db.query("update auth.users set banned_until=now()+interval '1 day' where id=$1",[confirmed]);
+ await assert.rejects(as(admin,()=>scalar(sql,[randomUUID(),'reset',confirmed,'directory-0@example.test',reason])),{code:'22023'});await db.query('update auth.users set banned_until=null where id=$1',[confirmed]);
+});
+
+test('bulk Server Action stops remaining accounts when live administrator access is revoked',async()=>{
+ const s=actionContext({denyAfter:2}),targets=[{id:owner,email:'owner@example.test',requestId:randomUUID()},{id:randomUUID(),email:'not-processed@example.test',requestId:randomUUID()}];const result=await bulkManageUsers({},bulkForm('disable',targets));assert.ok(result.error);assert.equal(result.results.length,1);assert.equal(s.created,1);assert.equal(s.client.calls.filter(c=>c[0]==='update').length,1);
 });

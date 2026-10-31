@@ -1,11 +1,12 @@
 "use client";
-import {useActionState,useState} from "react";
+import {useActionState,useEffect,useState} from "react";
 import {manageUser} from "@/app/user-admin-actions";
 
-export type ManagedUser={id:string;email:string;display_name:string;email_confirmed_at:string|null;disabled:boolean;platform_administrator:boolean};
-export function UserManagementForm({requestId,user}:{requestId:string;user?:ManagedUser}){
- const [nonce,setNonce]=useState(requestId),[operation,setOperation]=useState(user?"reset":"invite");
+export type ManagedUser={id:string;email:string;display_name:string;email_confirmed_at:string|null;disabled:boolean;platform_administrator:boolean;facility_owner?:boolean;facility_count?:number;action_pending?:boolean;created_at?:string|null;last_sign_in_at?:string|null};
+export function UserManagementForm({requestId,user,initialOperation,onBusyChange}:{requestId:string;user?:ManagedUser;initialOperation?:string;onBusyChange?:(busy:boolean)=>void}){
+ const [nonce,setNonce]=useState(requestId),[operation,setOperation]=useState(initialOperation??(user?"reset":"invite"));
  const [state,action,pending]=useActionState(manageUser,{});
+ useEffect(()=>{onBusyChange?.(pending);return()=>onBusyChange?.(false);},[pending,onBusyChange]);
  return <form action={action} className="account-form user-management-form" aria-busy={pending}><fieldset disabled={pending}>
   <input type="hidden" name="request_id" value={nonce}/><input type="hidden" name="user_id" value={user?.id??""}/><input type="hidden" name="expected_email" value={user?.email??""}/>
   {user?<label>Account action<select name="operation" value={operation} onChange={e=>{setOperation(e.target.value);setNonce(crypto.randomUUID());}}><option value="reset">Send password reset link</option>{!user.platform_administrator&&<><option value="email">Update login email</option><option value={user.disabled?"enable":"disable"}>{user.disabled?"Enable account":"Disable account"}</option><option value="remove">Permanently remove account</option></>}</select></label>:<><input type="hidden" name="operation" value="invite"/><label>Full name<input name="name" required minLength={2} maxLength={120}/></label></>}

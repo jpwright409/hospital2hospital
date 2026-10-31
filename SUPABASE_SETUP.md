@@ -1,3 +1,47 @@
+## October 31: compact Users list and guarded bulk account actions
+
+### Confirmation redirect resolved through configuration
+
+The user reports that removing vercel.app redirect URLs from Supabase stopped confirmation emails from reaching Vercel's login page. Authentication application code was left unchanged. Read-only checks found www.hospital2hospital.com publicly accessible, with hospital2hospital.com redirecting to www. Keep Supabase Auth's Site URL and Vercel's NEXT_PUBLIC_SITE_URL on the canonical public HTTPS domain, with the required production callback/recovery/invitation paths allowed. Remove generated protected deployment URLs from production confirmation destinations. Keep preview deployment protection enabled; users do not need Vercel accounts. Existing emails may retain old URLs; verify with a fresh confirmation email after settings changes. Do not share token-bearing email URLs in chat or logs. References: https://supabase.com/docs/guides/auth/redirect-urls and https://vercel.com/docs/deployment-protection .
+
+### Setup before publishing
+
+Apply **20261031002000_bulk_user_administration.sql** after 019 in SQL Editor. The implementation does not apply remote migrations or deploy automatically. No new environment variables or credentials are required. Existing isolated server-only SUPABASE_SECRET_KEY remains required for privileged Auth administration; ordinary accounts still use publishable clients.
+
+020 adds two platform-admin-only guarded RPCs: admin_user_directory_v2 (name/email search, confirmation/disabled filters, newest-first pagination, joined/last-sign-in dates, membership count, ownership and unresolved-action flags) and begin_account_bulk_item. The latter delegates to the existing audited per-account operation after checking live enabled/confirmed platform-admin status and excluding self/active administrators. No table/RLS permissions are expanded and no bulk service-role bypass is introduced. Existing removal claim authorization and service-only finalization remain unchanged.
+
+The original 20/hour limit now distinguishes cleanup from email/identity changes: at most **200 total account administration actions/hour per actor**, of which at most **20 may be invite/reset/email changes**. Existing per-target reset cooldowns, stale-email checks, protected role/owner checks and unresolved-operation blocks remain. Reset reservation now also checks live Auth bans. Supabase SMTP/provider limits may be stricter. The Users page permits a 120-second action duration for bounded sequential requests; a timeout is not proof that nothing happened.
+
+### Use the compact list
+
+Search by name/email and choose All, Awaiting confirmation, Email confirmed, or Disabled. Rows show joined date, last sign-in, confirmation/access status and active facility membership count. Metadata helps review; it does not determine whether an account is abusive. A facility membership count does not imply that facility is approved. Platform administrator roles remain separate from facility roles.
+
+Quick buttons on the right open reviewed actions for Reset link, Disable, and Remove. More / Enable-edit retains individual email updates, enabling and protected account controls. Add a user manually still uses the invitation form. Unresolved actions link to the audit and are unavailable for further changes until reconciled.
+
+For bulk work, choose Disable, Remove permanently, or Send password reset, then select eligible rows or Select eligible accounts on this page. **Only the current page/action is selected, up to 20 accounts**; changing the action or page clears selection. Review the exact email list, provide an audit reason, and check confirmation. Removal additionally requires typing **REMOVE**, is irreversible, and retains shared facility/listing/conversation/support history as documented for 018. Facility owners must transfer ownership through the trusted operator process first. Disabling is reversible and is preferable when identity/intent is uncertain. Reset sends real recovery emails only to confirmed, enabled accounts; do not use it for unidentified accounts.
+
+Every target has a stable request UUID, live authorization/target/expected-email check, separate audit and existing isolated Auth SDK operation. A batch is deliberately **not all-or-nothing**: confirmed successes remain completed if a later target fails. Per-account results distinguish successful requests from errors; remaining accounts are not processed when live actor authorization fails. No successful/uncertain operation is automatically replayed. After a timeout or error, inspect the per-account audit and actual Auth state before a new request. Never retry removals using hard deletion or clear account controls blindly. Real emails already requested cannot be recalled.
+
+### Signup review and bot prevention
+
+A read-only public Auth-settings check on October 31 confirmed signup is enabled and automatic email confirmation is off. The public endpoint did not expose CAPTCHA status, so this is not proof of hosted CAPTCHA configuration. This app currently has no CAPTCHA widget/token integration. Facility approval still gates inventory/conversations; email confirmation alone does not grant publishing access. Do not delete accounts solely because a name looks unfamiliar. Review dates, confirmation, facility membership and owner context; use reversible disable when unsure.
+
+For preventing repeat automated registrations, the recommended next change is Supabase's built-in CAPTCHA protection together with a matching client widget/token integration (for example Cloudflare Turnstile). Do not enable hosted CAPTCHA alone before the app can supply tokens to the protected Auth flows; that could block legitimate signups/logins/recovery. An app-only honeypot or rate limit does not protect direct calls to the public Auth signup API. This release does not configure CAPTCHA, change signup eligibility, or perform automatic spam classification. Official setup: https://supabase.com/docs/guides/auth/auth-captcha .
+
+### Verification and manual checklist
+
+Local automated checks execute migration 020 and its actual SQL/RLS in PGlite, plus mocked Auth/Server Actions. They cover filtered directory isolation/pagination/metadata, anonymous/ordinary/unconfirmed admin denial, protected administrator and owner checks, forged/stale target email, confirmation/batch-size/duplicate IDs, per-account replay protection, partial outcomes, revoked actor access, reset eligibility and the cleanup/email rate ceilings. Local Chrome uses fictional props and submits no forms. No real accounts were modified or emails sent. Final test/lint/build results are recorded in CODEX.md.
+
+After migration and publication, use controlled test accounts to check:
+
+1. Fresh registration confirmation returns to the public H2H domain in a private browser, without any Vercel login.
+2. Search/filter/pagination includes expected accounts; removed accounts remain hidden. Joined/sign-in information is visible only to confirmed enabled platform administrators.
+3. Select two disposable non-admin accounts, disable them in one batch, review individual audit entries and verify old sessions lose access. Enable through More and verify access is restored.
+4. Remove two disposable non-owner accounts with typed confirmation. Verify shared history remains, the directory entries disappear, and those old accounts cannot sign in or be enabled.
+5. Select two controlled confirmed enabled accounts for reset. Verify one recovery request per user, valid public-domain links, repeat-submit/cooldown behavior and provider limits. Do not use real users for failure simulation.
+6. Verify protected administrators, facility owners (removal), unconfirmed/disabled reset targets, and unresolved actions cannot be selected or altered through forged/direct requests. Exercise partial failure/revocation with mocks first; reconcile actual uncertain outcomes through the existing trusted operator process.
+
+
 ## October 23: signed-out homepage listing preview
 
 The welcome login view now shows a mission statement, a full-width scrollable preview of up to 12 current public listings, and resource links. No migrations, new environment variables or privileged credentials are required. The public GET /api/public-listing-preview always creates a session-free publishable-key client, ignores caller identity/filters, and uses existing anonymous inventory/photo RLS. It returns only the narrow public card projection and one signed cover image per listing, with private/no-store responses and no shared image optimization. Inactive/sold/deleted stock and unapproved facilities remain excluded by the existing database permissions.

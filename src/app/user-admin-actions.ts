@@ -5,9 +5,10 @@ import {createUserAdmin} from "@/lib/supabase/user-admin";
 import {getSiteUrl} from "@/lib/app-mode";
 import {validUuid} from "@/lib/auth/policy";
 import {performUserAdminOperation} from "@/lib/auth/user-admin-operation.mjs";
+import {parseBulkUserRequest} from "@/lib/auth/bulk-users.mjs";
 import type {ActionState} from "./auth/actions";
 
-export async function manageUser(_state:ActionState,form:FormData):Promise<ActionState>{
+async function runUserAction(form:FormData,bulk=false):Promise<ActionState>{
  const {supabase}=await requirePlatformAdministrator();
  const field=(key:string)=>String(form.get(key)??"").trim();
  const id=field("request_id"),action=field("operation"),targetId=field("user_id")||null;
@@ -16,7 +17,7 @@ export async function manageUser(_state:ActionState,form:FormData):Promise<Actio
  if(action==='remove'&&field('remove_confirmation').toLowerCase()!==expectedEmail)return {error:"Type the account's email address to confirm permanent removal."};
  let admin:ReturnType<typeof createUserAdmin>;
  try{admin=createUserAdmin();}catch(e){return {error:(e as Error).message};}
- const begin=await supabase.rpc("begin_account_admin_action",{p_id:id,p_action:action,p_target:targetId,p_email:email,p_name:name,p_expected_email:expectedEmail,p_reason:reason});
+ const begin=await supabase.rpc(bulk?"begin_account_bulk_item":"begin_account_admin_action",bulk?{p_id:id,p_action:action,p_target:targetId,p_expected_email:expectedEmail,p_reason:reason}:{p_id:id,p_action:action,p_target:targetId,p_email:email,p_name:name,p_expected_email:expectedEmail,p_reason:reason});
  if(begin.error)return {error:serviceError(begin.error)};
  if(!begin.data?.execute)return begin.data?.state==='succeeded'?{success:"This request already completed; it was not repeated."}:{error:"This request has already been attempted. Check the directory and audit before starting a new request."};
  const token=begin.data.token;let success:boolean|null=false;
@@ -39,4 +40,24 @@ export async function manageUser(_state:ActionState,form:FormData):Promise<Actio
   revalidatePath("/admin/users");
   return {error:"The operation could not be confirmed. Check the user directory, audit and Supabase Auth before retrying. A requested disable remains blocked for safety; email delivery depends on Supabase SMTP."};
  }
+}
+
+export async function manageUser(_state:ActionState,form:FormData):Promise<ActionState>{return runUserAction(form);}
+
+export type BulkUserState={error?:string;results?:{id:string;email:string;success?:string;error?:string}[]};
+export async function bulkManageUsers(_state:BulkUserState,form:FormData):Promise<BulkUserState>{
+ // Authenticate before parsing targets or creating any privileged client.
+ await requirePlatformAdministrator();
+ let request:ReturnType<typeof parseBulkUserRequest>;
+ try{request=parseBulkUserRequest(form);}catch(e){return {error:(e as Error).message};}
+ const results:NonNullable<BulkUserState['results']>=[];
+ // Deliberately sequential. Each account keeps its own live permission check,
+ // immutable target/email, audit, idempotency key and uncertainty handling.
+ for(const target of request.targets){
+  const item=new FormData();
+  for(const [key,value]of Object.entries({request_id:target.requestId,operation:request.operation,user_id:target.id,expected_email:target.email,reason:request.reason,confirm:'yes',remove_confirmation:target.email}))item.set(key,value);
+  try{results.push({id:target.id,email:target.email,...await runUserAction(item,true)});}
+  catch{return {error:'The batch stopped because authorization or the account service changed. Remaining accounts were not processed. Review the results and audit before retrying.',results};}
+ }
+ revalidatePath('/admin/users');return {results};
 }

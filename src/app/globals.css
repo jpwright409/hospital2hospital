@@ -124,6 +124,23 @@
 .user-management-form{max-width:650px}.user-management-form .manage-actions{margin-top:14px}.user-management-form label.user-admin-confirm{display:flex;flex-direction:row;align-items:flex-start;gap:10px}.user-admin-confirm input{width:auto;flex-shrink:0;margin-top:3px}
 .user-management-form .button.danger{background:var(--danger);color:var(--white)}
 .user-management-form .button.danger:hover{background:color-mix(in srgb,var(--danger) 85%,black)}
+.user-directory-filters{display:flex;align-items:flex-end;flex-wrap:wrap;gap:14px;margin:22px 0}
+.user-directory-filters label{display:flex;flex-direction:column;gap:8px;font-size:12px}.user-directory-filters label:first-child{flex:1;min-width:180px}
+.user-directory-filters input,.user-directory-filters select,.bulk-user-toolbar select{height:42px;padding:9px 12px;border:1px solid var(--line);border-radius:5px;background:var(--white);color:var(--foreground)}
+.bulk-user-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:14px 24px;padding:16px;background:var(--soft);border:1px solid var(--line);border-radius:8px;margin-top:18px}
+.bulk-user-toolbar label{display:flex;align-items:center;gap:10px;font-size:12px}.bulk-user-toolbar input[type=checkbox],.user-directory-row>input{width:16px;height:16px;flex-shrink:0;accent-color:var(--primary)}
+.bulk-user-toolbar label.user-admin-confirm{flex-direction:row}
+.user-selection-help{font-size:11px;margin:10px 0 18px}
+.user-list-heading,.user-directory-row{display:grid;grid-template-columns:20px minmax(180px,1fr) minmax(160px,.65fr) 280px;gap:16px;align-items:center;padding:14px}
+.user-list-heading{font-size:11px;font-weight:600;color:var(--muted)}.user-list-heading>span:last-child{text-align:right}
+.user-directory-list{list-style:none;padding:0;margin:0;border:1px solid var(--line);border-radius:8px;background:var(--white);overflow:hidden}
+.user-directory-row+li{border-top:1px solid var(--line)}.user-row-identity{min-width:0;overflow-wrap:anywhere}.user-row-identity strong{font-size:13px}.user-row-identity p{font-size:12px}.user-row-identity small{font-size:10px;color:var(--muted)}
+.user-row-status{display:flex;align-items:center;flex-wrap:wrap;gap:5px;min-width:0}.user-row-status .badge{padding:4px 7px;font-size:10px}.user-row-status small,.user-row-status a{width:100%;font-size:10px}.user-row-status a{color:var(--primary-hover);text-decoration:underline}
+.user-row-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:5px}.user-row-actions .button{min-height:32px;font-size:10px;padding:6px 9px}.user-row-actions .user-remove-button{color:var(--danger);border-color:var(--danger-line)}
+.user-action-dialog{width:min(650px,calc(100vw - 32px));max-height:85dvh;overflow-y:auto}.user-action-dialog h2{font-size:23px;overflow-wrap:anywhere;margin-bottom:12px}.user-action-dialog>p{margin:12px 0}.user-action-dialog .user-management-form{max-width:none}
+.bulk-targets{max-height:130px;overflow:auto;padding-left:20px;font-size:12px;overflow-wrap:anywhere;margin:14px 0}.bulk-results{margin-top:16px}.bulk-results ul{padding-left:18px;overflow-wrap:anywhere}.bulk-results li{margin:12px 0}.bulk-results h3{font-size:17px}
+@media(max-width:1100px){.user-list-heading{display:none}.user-directory-row{grid-template-columns:20px minmax(0,1fr) minmax(130px,.7fr)}.user-row-actions{grid-column:2 / -1;justify-content:flex-start}}
+@media(max-width:600px){.user-directory-row{grid-template-columns:20px minmax(0,1fr);gap:10px}.user-row-status,.user-row-actions{grid-column:2}.bulk-user-toolbar{align-items:flex-start;gap:12px}.user-directory-filters label{width:100%}}
 
 /* Owner-approved resources, with room for future directory entries. */
 .marketplace-resource-links{display:flex;flex-wrap:wrap;align-items:center;gap:8px 30px;padding-top:18px;padding-bottom:18px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600;color:var(--primary-hover)}
