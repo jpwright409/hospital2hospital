@@ -7,6 +7,8 @@ import { facilityCapabilities, type Facility, type Membership } from "./policy";
 
 export function serviceError(error: unknown): string {
   const e = error as { code?: string; message?: string; status?: number };
+  if (e.code === "captcha_required") return "Complete security verification before continuing.";
+  if (e.code === "captcha_failed") return "Security verification expired or was unsuccessful. Please verify again and retry.";
   if (e.code === "invalid_credentials") return "Email or password is incorrect. Try again or reset your password.";
   if (e.code === "email_not_confirmed") return "Confirm your email before logging in. Check your inbox and spam folder.";
   if (e.code === "over_email_send_rate_limit" || e.status === 429) return "Too many attempts. Wait before trying again; check Supabase email delivery limits.";

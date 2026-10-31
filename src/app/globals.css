@@ -209,3 +209,8 @@
 .user-directory-search{margin:20px 0}.user-directory{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:16px}.user-directory>.panel{min-width:0}.user-directory p{overflow-wrap:anywhere}.user-statuses{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}.user-audit{margin-top:24px}.user-audit-entry{border-top:1px solid var(--line);padding:14px 0;overflow-wrap:anywhere}.user-audit-entry small{color:var(--muted);font-size:11px}
 @media(max-width:800px){.user-directory{grid-template-columns:1fr}}
 @media(max-width:600px){.facilitator-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.auth-verification { margin-top: 16px; min-width: 0; }
+.auth-verification > div { max-width: 100%; }
+.auth-verification small { display: block; margin-top: 8px; }
+.auth-verification .text-button { display: inline-block; margin-top: 6px; font-size: .8rem; }

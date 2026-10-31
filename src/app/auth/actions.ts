@@ -1,5 +1,6 @@
 "use server";
 
+import { captchaOptions } from "@/lib/auth/captcha.mjs";
 import { photoReturnPath } from "@/lib/auth/photo-return.mjs";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -21,9 +22,10 @@ export async function register(_previous: ActionState, form: FormData): Promise<
     return { error: "Enter your name, a valid email, and a password of 12–128 characters." };
   }
   try {
+    const captcha = captchaOptions(form, process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
     const supabase = await createClient();
     const { error } = await supabase.auth.signUp({ email, password, options: {
-      data: { display_name: name }, emailRedirectTo: `${getSiteUrl()}/auth/callback`,
+      ...captcha, data: { display_name: name }, emailRedirectTo: `${getSiteUrl()}/auth/callback`,
     } });
     if (error) return { error: serviceError(error) };
     return { success: "Check your email to confirm your account, then log in. If you already have an account, use login or password recovery." };
@@ -35,8 +37,9 @@ export async function login(_previous: ActionState, form: FormData): Promise<Act
   const password = String(form.get("password") ?? "");
   if (!emailValid(email) || !password || password.length > 128) return { error: "Enter a valid email and password." };
   try {
+    const captcha = captchaOptions(form, process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password, options: captcha });
     if (error) return { error: serviceError(error) };
     const enabled=await supabase.rpc("account_access_enabled");
     if(enabled.error||enabled.data!==true){await supabase.auth.signOut();return {error:enabled.error?serviceError(enabled.error):"This account is disabled. Contact support."};}
@@ -60,8 +63,9 @@ export async function forgotPassword(_previous: ActionState, form: FormData): Pr
   const email = value(form, "email");
   if (!emailValid(email)) return { error: "Enter a valid email address." };
   try {
+    const captcha = captchaOptions(form, process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
     const supabase = await createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${getSiteUrl()}/auth/recovery` });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { ...captcha, redirectTo: `${getSiteUrl()}/auth/recovery` });
     if (error) return { error: serviceError(error) };
     return { success: "If an account exists for this email, a recovery link has been requested. Check your inbox and spam folder." };
   } catch (error) { return { error: serviceError(error) }; }
@@ -71,8 +75,9 @@ export async function resendConfirmation(_previous: ActionState, form: FormData)
   const email = value(form, "email");
   if (!emailValid(email)) return { error: "Enter a valid email address." };
   try {
+    const captcha = captchaOptions(form, process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
     const supabase = await createClient();
-    const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: `${getSiteUrl()}/auth/callback` } });
+    const { error } = await supabase.auth.resend({ type: "signup", email, options: { ...captcha, emailRedirectTo: `${getSiteUrl()}/auth/callback` } });
     if (error && error.code !== "email_already_confirmed") return { error: serviceError(error) };
     return { success: "If this account needs confirmation, a new confirmation email has been requested. Otherwise, use login or password recovery." };
   } catch (error) { return { error: serviceError(error) }; }

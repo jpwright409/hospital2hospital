@@ -1,3 +1,18 @@
+## October 31: Turnstile authentication protection
+
+Supabase built-in CAPTCHA uses Cloudflare Turnstile on registration, password login, password recovery and confirmation resend. Both standalone and welcome forms share the widget. The site key enables widgets and local missing-token guards; Supabase must also have CAPTCHA enabled to reject direct/bypassed Auth requests. The app does not validate tokens twice or consume them through a separate Siteverify call. No migration, dependency or new privileged client is required.
+
+Activation order:
+1. In Cloudflare Turnstile, allow hospital2hospital.com and www.hospital2hospital.com. Keep Managed mode. Add localhost only if using that real widget for local development; local mocked tests use a fictional/test key. Preview hosts need their own allowed hostname and matching key or must remain out of the production Auth flow.
+2. Set NEXT_PUBLIC_TURNSTILE_SITE_KEY in Vercel Production, then build/deploy these form changes. This is a public site key, never the Turnstile secret. NEXT_PUBLIC values are compiled into browser bundles; changing it requires rebuilding.
+3. Visit the deployed login, registration, forgot-password and resend-confirmation pages and confirm verification loads. Then open Supabase Authentication > Bot and Abuse Protection (dashboard labels may vary), select Turnstile, paste the matching Turnstile secret, enable CAPTCHA and save. Do not put this secret in a NEXT_PUBLIC variable or chat.
+4. In a private browser, test a controlled registration/confirmation, login, failed-login retry, recovery/update, resend confirmation and authenticated phone-photo return path. Confirm direct public Auth signup without a token is rejected using a controlled test, not real-user cleanup. Verify audited admin reset/invite separately with a controlled consenting recipient; isolated service-role Auth requests are exempt from CAPTCHA, while live role/audit/rate protections remain unchanged.
+5. If verification breaks, turn OFF Supabase CAPTCHA first, then remove the Vercel site-key variable and redeploy if removing the widgets. Removing the widget alone while Supabase still requires tokens blocks authentication.
+
+Tokens are bounded, single-use, passed only to the ordinary Supabase Auth client, cleared on expiry/error and renewed after every submission. Submit stays disabled until verification succeeds. Retry and blocked-script guidance are visible; narrow forms use compact widgets. Existing recovery/callback/session refresh/password update/logout are preserved. Never log verification tokens or real recovery links. Hosted provider success and real email/device tests are separate from local mocked tests.
+
+Official references: https://supabase.com/docs/guides/auth/auth-captcha and https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/ .
+
 ## October 31: compact Users list and guarded bulk account actions
 
 ### Confirmation redirect resolved through configuration

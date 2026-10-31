@@ -1,19 +1,28 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, type ReactNode } from "react";
+import { Turnstile } from "./turnstile";
 import Link from "next/link";
 import { register, login, logout, forgotPassword, resendConfirmation, updatePassword, onboardFacility, selectFacility, reviewFacility, type ActionState } from "@/app/auth/actions";
 
-export function ActionForm({ action, children, submit, className = "" }: {
+export function ActionForm({ action, children, submit, className = "", captcha = false }: {
   action: (state: ActionState, form: FormData) => Promise<ActionState>;
-  children?: ReactNode; submit: string; className?: string;
+  children?: ReactNode; submit: string; className?: string; captcha?: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(action, {});
+  const siteKey = captcha ? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() : "";
+  const [token, setToken] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const [state, formAction, pending] = useActionState(async (previous: ActionState, form: FormData) => {
+    try { return await action(previous, form); }
+    finally { if (siteKey) { setToken(""); setAttempt(value => value + 1); } }
+  }, {});
   return <form action={formAction} className={`account-form ${className}`} aria-busy={pending}>
-    <fieldset disabled={pending}>{children}</fieldset>
+    <fieldset disabled={pending}>{children}
+      {siteKey && <><input type="hidden" name="captcha_token" value={token}/><Turnstile key={attempt} siteKey={siteKey} onToken={setToken}/></>}
+    </fieldset>
     {state.error && <p className="error" role="alert">{state.error}</p>}
     {state.success && <p className="notice" role="status">{state.success}</p>}
-    <button className="button primary" disabled={pending} type="submit">{pending ? "Please wait…" : submit}</button>
+    <button className="button primary" disabled={pending || (!!siteKey && !token)} type="submit">{pending ? "Please wait…" : submit}</button>
   </form>;
 }
 
@@ -22,7 +31,7 @@ export function AuthForm({ kind, welcome = false, returnTo }: { kind: "register"
   const loginPath = welcome ? "/" : "/auth/login";
   const forgotPath = welcome ? "/?welcome=forgot" : "/auth/forgot-password";
   return <>
-    <ActionForm action={{ register, login, forgot: forgotPassword, update: updatePassword, resend: resendConfirmation }[kind]}
+    <ActionForm key={kind} captcha={kind !== "update"} action={{ register, login, forgot: forgotPassword, update: updatePassword, resend: resendConfirmation }[kind]}
       submit={{ register: "Create account", login: "Log in", forgot: "Request recovery link", update: "Update password", resend: "Request confirmation email" }[kind]}>
       {kind === "login" && returnTo && <input type="hidden" name="next" value={returnTo}/> }
       {kind === "register" && <label>Your name<input name="display_name" required minLength={2} maxLength={120} autoComplete="name"/></label>}
