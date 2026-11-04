@@ -22,6 +22,7 @@ const auth = dataModule(`export function serviceError(e){return e.code==='captch
 const navigation = dataModule(`export function redirect(path){throw Object.assign(Error('Redirect'),{path});}`);
 let source = await readFile(new URL('../src/app/auth/actions.ts', import.meta.url), 'utf8');
 for (const [from, to] of [
+  ['@/lib/auth/registration.mjs', new URL('../src/lib/auth/registration.mjs', import.meta.url).href],
   ['@/lib/auth/captcha.mjs', new URL('../src/lib/auth/captcha.mjs', import.meta.url).href],
   ['@/lib/auth/photo-return.mjs', new URL('../src/lib/auth/photo-return.mjs', import.meta.url).href],
   ['@/lib/supabase/server', client], ['@/lib/auth/server', auth], ['next/navigation', navigation],
@@ -32,7 +33,7 @@ for (const [from, to] of [
 const actions = await import(dataModule(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText));
 function form(token) {
   const f = new FormData();
-  for (const [k,v] of Object.entries({email:'controlled@example.test',password:'fictional-password',display_name:'Fictional user',next:'/listings/00000000-0000-4000-8000-000000000001/photos'})) f.set(k,v);
+  for (const [k,v] of Object.entries({email:'controlled@example.test',password:'fictional-password',display_name:'Fictional user',facility_npi:'1234567893',authorized_facility:'yes',accept_terms:'yes',next:'/listings/00000000-0000-4000-8000-000000000001/photos'})) f.set(k,v);
   if (token) f.set('captcha_token',token);
   return f;
 }
@@ -49,9 +50,11 @@ test('actual Auth actions reject missing tokens before contacting Auth and forwa
       assert.equal(s.calls[0][0],sdk);
       const options = action==='forgotPassword'?s.calls[0][2]:s.calls[0][1].options;
       assert.equal(options.captchaToken,'token');
+      if(action==='register'){assert.equal(options.data.facility_npi,'1234567893');assert.equal(options.data.terms_accepted,true);assert.equal(options.data.authorized_facility,true);assert.equal(options.data.terms_version,'placeholder-2026-11-04');}
       s.error={code:'captcha_failed'};
       assert.equal((await actions[action]({},form('expired'))).error,'Verify again');
     }
+    const incomplete=form('token');incomplete.delete('accept_terms');globalThis[key]={clients:0,calls:[],enabled:true};assert.ok((await actions.register({},incomplete)).error);assert.equal(globalThis[key].calls.length,0);
     const s=globalThis[key]={clients:0,calls:[],enabled:false};
     assert.match((await actions.login({},form('token'))).error,/disabled/);
     assert.equal(s.calls.at(-1)[0],'signOut');

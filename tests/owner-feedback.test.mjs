@@ -19,7 +19,7 @@ before(async()=>{
  for(const f of(await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort()) await db.exec(await readFile(new URL(`../supabase/migrations/${f}`,import.meta.url),'utf8'));
  await seedApprovedProducts(db,[product,{...product,manufacturer:"Other Brand"}]);
  for(const user of[seller,buyer,other,pending,viewer]) await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[user,`${user}@example.test`]);
- const facilities=[];for(const user of[seller,buyer,other,pending]) {await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);facilities.push(await scalar("select public.onboard_facility('Test facility','City','WI','hospital',gen_random_uuid())"));}
+ const facilities=[];for(const user of[seller,buyer,other,pending]) {await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);facilities.push(await scalar("select public.onboard_facility_with_registration('Test facility','City','WI','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)"));}
  [fa,fb,fc,fp]=facilities;await db.query("update public.facilities set status='approved' where id=any($1::uuid[])",[[fa,fb,fc]]);
  await db.query("insert into public.facility_memberships(facility_id,user_id,role) values($1,$2,'viewer')",[fb,viewer]);
  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[seller]);listing=await create(fa);
@@ -27,7 +27,7 @@ before(async()=>{
 after(()=>db.close());
 test('new facility types onboard pending and never grant approval',async()=>{
  for(const type of['surgical_hospital','physician_office','other']) await as(buyer,async()=>{
-  const id=await scalar("select public.onboard_facility('New facility','City','WI',$1,gen_random_uuid())",[type]);
+  const id=await scalar("select public.onboard_facility_with_registration('New facility','City','WI',$1,gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)",[type]);
   assert.equal(await scalar('select facility_type from public.facilities where id=$1',[id]),type);assert.equal(await scalar('select status from public.facilities where id=$1',[id]),'pending');
  });
 });
@@ -42,7 +42,7 @@ test('contacts stay private; sharing is opt-in, buyer-approved and excludes seco
  await deny(null,'select * from public.facility_contacts',[],'anon');await deny(buyer,'select public.set_facility_contacts($1,$2)',[fa,{}]);
  await as(seller,async()=>{
   await db.query('select public.set_facility_contacts($1,$2)',[fa,{business_email:'business@example.test',secondary_email:'private@example.test'}]);
-  await db.query("select set_config('request.jwt.claim.sub',$1,true)",[buyer]);assert.equal(await scalar('select public.listing_business_contact($1,$2)',[listing,fb]),null);assert.equal(await scalar('select count(*)::int from public.facility_contacts'),0);
+  await db.query("select set_config('request.jwt.claim.sub',$1,true)",[buyer]);assert.equal(await scalar('select public.listing_business_contact($1,$2)',[listing,fb]),null);assert.equal(await scalar('select count(*)::int from public.facility_contacts where facility_id=$1',[fa]),0);
   await db.query("select set_config('request.jwt.claim.sub',$1,true)",[seller]);await db.query('select public.set_facility_contacts($1,$2)',[fa,{business_email:'business@example.test',secondary_email:'private@example.test',share_business_contact:true}]);
   await db.query("select set_config('request.jwt.claim.sub',$1,true)",[buyer]);const contact=await scalar('select public.listing_business_contact($1,$2)',[listing,fb]);assert.equal(contact.email,'business@example.test');assert.ok(!JSON.stringify(contact).includes('private@'));
  });
@@ -103,13 +103,13 @@ test('email transport is plain text with stable provider idempotency and does no
 
 test('onboarding with backup contact is transactional, private and idempotent',async()=>{
  await as(buyer,async()=>{
-  const request=randomUUID();const id=await scalar("select public.onboard_facility_with_contacts('Office','City','WI','physician_office',$1,$2)",[request,{secondary_email:'backup@example.test'}]);
+  const request=randomUUID();const id=await scalar("select public.onboard_facility_with_registration('Office','City','WI','physician_office',$1,$2,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)",[request,{secondary_email:'backup@example.test'}]);
   assert.equal(await scalar('select secondary_email from public.facility_contacts where facility_id=$1',[id]),'backup@example.test');
-  assert.equal(await scalar("select public.onboard_facility_with_contacts('Office','City','WI','physician_office',$1,$2)",[request,{secondary_email:'changed@example.test'}]),id);
+  assert.equal(await scalar("select public.onboard_facility_with_registration('Office','City','WI','physician_office',$1,$2,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)",[request,{secondary_email:'changed@example.test'}]),id);
   assert.equal(await scalar('select secondary_email from public.facility_contacts where facility_id=$1',[id]),'backup@example.test');
   assert.equal(await scalar('select count(*)::int from public.facility_memberships where facility_id=$1',[id]),1);
  });
- const request=randomUUID();await assert.rejects(as(buyer,()=>scalar("select public.onboard_facility_with_contacts('Office','City','WI','physician_office',$1,$2)",[request,{secondary_email:'bad-address'}])),{code:'22023'});
+ const request=randomUUID();await assert.rejects(as(buyer,()=>scalar("select public.onboard_facility_with_registration('Office','City','WI','physician_office',$1,$2,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)",[request,{secondary_email:'bad-address'}])),{code:'22023'});
  assert.equal(await scalar('select count(*)::int from public.facilities where onboarding_request_id=$1',[request]),0);
 });
 

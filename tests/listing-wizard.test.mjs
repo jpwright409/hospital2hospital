@@ -24,7 +24,7 @@ before(async()=>{
  for(const f of(await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(`../supabase/migrations/${f}`,import.meta.url),'utf8'));
  await seedApprovedProducts(db,[product,{...product,catalog_number:'WIZ-2'}]);pid=await scalar("select id from public.products where catalog_number='WIZ-1'");pid2=await scalar("select id from public.products where catalog_number='WIZ-2'");
  for(const user of[a,b,c,viewer,editor,revoked,pending,admin])await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[user,`${user}@example.test`]);
- const facilities=[];for(const user of[a,b,c,pending]){await who(user);facilities.push(await scalar("select public.onboard_facility('Wizard fixture','City','WI','hospital',gen_random_uuid())"));}
+ const facilities=[];for(const user of[a,b,c,pending]){await who(user);facilities.push(await scalar("select public.onboard_facility_with_registration('Wizard fixture','City','WI','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)"));}
  [fa,fb,fc,fp]=facilities;await db.query("update public.facilities set status='approved' where id=any($1::uuid[])",[[fa,fb,fc]]);
  for(const [user,role,status]of[[viewer,'viewer','active'],[editor,'inventory_editor','active'],[revoked,'inventory_editor','revoked']])await db.query('insert into public.facility_memberships(facility_id,user_id,role,status) values($1,$2,$3,$4)',[fa,user,role,status]);
  await db.query("insert into private.platform_administrators(user_id,bootstrap_reason) values($1,'Local wizard review fixture')",[admin]);

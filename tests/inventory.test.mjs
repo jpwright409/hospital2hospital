@@ -33,7 +33,7 @@ before(async()=>{
   const facilities=[];
   for(const user of [a,b,pending,suspended]) {
     await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);
-    facilities.push(await scalar("select public.onboard_facility('Test facility','Madison','WI','hospital',gen_random_uuid())"));
+    facilities.push(await scalar("select public.onboard_facility_with_registration('Test facility','Madison','WI','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)"));
   }
   [fa,fb,fp,fs]=facilities;
   await db.query("update public.facilities set status='approved' where id=any($1::uuid[])",[[fa,fb,fs]]);

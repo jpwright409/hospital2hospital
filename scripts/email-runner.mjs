@@ -12,7 +12,7 @@ export function emailConfiguration(env) {
 
 // Dependencies are injectable: tests never connect to Supabase or send mail.
 export async function runEmailBatch(client,config,{send=deliverEmail,pause=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}) {
- const claim=await client.rpc('claim_email_jobs',{p_limit:20});
+ const claim=await client.rpc('claim_email_jobs_v2',{p_limit:20});
  if(claim.error||!Array.isArray(claim.data))throw new Error('Could not claim email jobs. Check migrations and worker credentials.');
  const summary={claimed:claim.data.length,accepted:0,retry:0};
  for(const job of claim.data){

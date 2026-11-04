@@ -19,7 +19,7 @@ before(async()=>{
  for(const f of(await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(`../supabase/migrations/${f}`,import.meta.url),'utf8'));
  await seedApprovedProducts(db,[{manufacturer:'Reference fixture',catalog_number:'BOOST-1',name:'Reference supply',description:'Fixture',category:'General Surgery'}]);
  for(const user of[a,b,c,pending,admin,viewer,editor,revoked])await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[user,`${user}@example.test`]);
- const facilities=[];for(const user of[a,b,c,pending]){await who(user);facilities.push(await scalar("select public.onboard_facility('Boost fixture','City','WI','hospital',gen_random_uuid())"));}
+ const facilities=[];for(const user of[a,b,c,pending]){await who(user);facilities.push(await scalar("select public.onboard_facility_with_registration('Boost fixture','City','WI','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)"));}
  [fa,fb,fc,fp]=facilities;await db.query("update public.facilities set status='approved' where id=any($1::uuid[])",[[fa,fb,fc,fp]]);
  const listings=[];for(const [user,f] of[[a,fa],[a,fa],[b,fb],[c,fc],[pending,fp]]){
   await who(user);listings.push(await scalar('select public.create_inventory_listing($1,$2,$3)',[f,{manufacturer:'Reference fixture',catalog_number:'BOOST-1',name:'Reference supply',description:'Fixture',category:'General Surgery'},{quantity:1,quantity_unit:'each',units_per_package:1,price_usd:'10',condition:'New / unopened',sterile:false,single_use:false}]));

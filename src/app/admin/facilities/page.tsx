@@ -6,7 +6,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
   const { supabase } = await requirePlatformAdministrator();
   const params = await searchParams;
   const status = ["pending", "approved", "rejected", "suspended"].includes(params.status ?? "") ? params.status! : "pending";
-  const { data, error } = await supabase.from("facilities").select("id,name,city,state,facility_type,status,owner_user_id,review_reason,created_at")
+  const { data, error } = await supabase.from("facilities").select("id,name,city,state,facility_type,status,owner_user_id,review_reason,created_at,facility_npi,registration_terms_version,registration_accepted_at")
     .eq("status", status).order("created_at", { ascending: false }).limit(100);
   if (error) throw new Error(serviceError(error));
   return <div className="container page-section">
@@ -15,7 +15,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
     <div className="account-grid">{(data as Facility[]).map(f => <section className="panel" key={f.id}><h2>{f.name}</h2><p>{f.city}, {f.state} · {f.facility_type}</p>
       <span className={`badge status-${f.status}`}>{f.status}</span><p className="muted">Owner account ID: {f.owner_user_id}</p>
       {f.review_reason && <p>Previous reason: {f.review_reason}</p>}
-      <FacilityReviewForm id={f.id} status={f.status}/></section>)}</div>
+      <p>Facility NPI: {f.facility_npi??"Not provided (existing facility)"}</p><p className="muted">Registration terms: {f.registration_terms_version??"Not recorded"}{f.registration_accepted_at?` ? Accepted ${new Date(f.registration_accepted_at).toISOString().slice(0,10)}`:""}</p><FacilityReviewForm id={f.id} status={f.status}/></section>)}</div>
     {!data?.length && <div className="empty"><h2>No {status} facilities</h2><p>New onboarding submissions will appear under Pending.</p></div>}
   </div>;
 }

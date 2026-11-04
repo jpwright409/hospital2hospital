@@ -7,6 +7,7 @@ import { facilityCapabilities, type Facility, type Membership } from "./policy";
 
 export function serviceError(error: unknown): string {
   const e = error as { code?: string; message?: string; status?: number };
+  if (e.code === "registration_required") return e.message ?? "Complete your facility registration declarations.";
   if (e.code === "captcha_required") return "Complete security verification before continuing.";
   if (e.code === "captcha_failed") return "Security verification expired or was unsuccessful. Please verify again and retry.";
   if (e.code === "invalid_credentials") return "Email or password is incorrect. Try again or reset your password.";

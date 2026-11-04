@@ -19,7 +19,7 @@ before(async()=>{
  await installStorageContract(db);
  for(const f of(await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(`../supabase/migrations/${f}`,import.meta.url),'utf8'));
  for(const user of[owner,other,viewer,unconfirmed,admin])await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,$3)',[user,`${user}@example.test`,user===unconfirmed?null:new Date()]);
- await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);facility=await scalar("select public.onboard_facility('Fixture facility','City','WI','hospital',gen_random_uuid())");
+ await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);facility=await scalar("select public.onboard_facility_with_registration('Fixture facility','City','WI','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)");
  await db.query("insert into public.facility_memberships(facility_id,user_id,role) values($1,$2,'viewer')",[facility,viewer]);
  await db.query('update public.profiles set active_facility_id=$1 where id=$2',[facility,viewer]);
  // Even a forged selected facility cannot confer membership/contact access.

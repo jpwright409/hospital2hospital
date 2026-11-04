@@ -1,3 +1,4 @@
+import {parseStates,expirationStatuses} from "./filters.mjs";
 export type PublicFacility = { id: string; name: string; city: string; state: string; facility_type: string };
 export type CatalogProduct = { id: string; manufacturer_id: string; catalog_number: string; name: string; category: string; description: string; manufacturer: string; product_kind?: "capital" | "disposable" | null };
 export type InventoryListing = CatalogProduct & {
@@ -10,7 +11,7 @@ export type InventoryListing = CatalogProduct & {
   photos?: import("@/lib/photos/server").ListingPhoto[];
 };
 export type SearchParams = Record<string, string | string[] | undefined>;
-export type InventoryQuery = { q: string; category: string; manufacturer: string; location: string; sort: string; page: number; status: string; seller_facility: string; procedure: string; kind: string };
+export type InventoryQuery = { q: string; category: string; manufacturer: string; location: string; states?: string[]; expiration_status?: string; sort: string; page: number; status: string; seller_facility: string; procedure: string; kind: string };
 export type SearchResult = { items: InventoryListing[]; total: number; page: number; page_size: number };
 export type InventoryState = { error?: string; success?: string };
 export type WizardDraft = {id:string;facility_id:string;product_id:string;data:Record<string,string>;step:number;revision:number;listing_id:string|null;listing_revision:number|null;published_at:string|null};
@@ -28,7 +29,7 @@ export const conditions = ["New / unopened", "New / open packaging", "Used — g
 export function parseInventoryQuery(params: SearchParams): InventoryQuery {
   const value = (key: string, max = 200) => typeof params[key] === "string" ? params[key].slice(0,max).trim() : "";
   const sort = value("sort"); const page = Number(value("page"));
-  return { q: value("q"), category: value("category",100), manufacturer: value("manufacturer",36), location: value("location",100),
+  return { q: value("q"), category: value("category",100), manufacturer: value("manufacturer",36), location: "", states: parseStates(params.states ?? value("location",2)), expiration_status: expirationStatuses.some(s=>s.value===value("expiration_status")) ? value("expiration_status") : "",
     sort: ["newest","price_low","price_high"].includes(sort) ? sort : "newest",
     page: Number.isSafeInteger(page) && page > 0 && page <= 100000 ? page : 1,
     seller_facility: /^[0-9a-f-]{36}$/i.test(value("seller_facility",36)) ? value("seller_facility",36) : "", procedure: procedures.includes(value("procedure")) ? value("procedure") : "", kind: ["capital","disposable"].includes(value("kind")) ? value("kind") : "",
@@ -36,7 +37,7 @@ export function parseInventoryQuery(params: SearchParams): InventoryQuery {
 }
 export function inventoryUrl(path: string, query: InventoryQuery, page: number) {
   const params = new URLSearchParams();
-  for (const [key,value] of Object.entries({...query,page})) if (value && (key !== "page" || value !== 1)) params.set(key,String(value));
+  for (const [key,value] of Object.entries({...query,page})) if (value && (key !== "page" || value !== 1)) { if(Array.isArray(value)) value.forEach(v=>params.append(key,v)); else params.set(key,String(value)); }
   return `${path}?${params}`;
 }
 export function validateInventory(form: FormData) {

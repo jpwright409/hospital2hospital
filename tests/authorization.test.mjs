@@ -43,9 +43,9 @@ before(async () => {
       [id, id === unconfirmed ? null : new Date().toISOString(), { display_name: "Test account", role: "platform_administrator", is_admin: true }]);
   }
   await db.query("select set_config('request.jwt.claim.sub',$1,false)", [a]);
-  facilityA = await scalar(db, "select public.onboard_facility('Facility A','Madison','WI','hospital',$1)", ["20000000-0000-4000-8000-000000000001"]);
+  facilityA = await scalar(db, "select public.onboard_facility_with_registration('Facility A','Madison','WI','hospital',$1,'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)", ["20000000-0000-4000-8000-000000000001"]);
   await db.query("select set_config('request.jwt.claim.sub',$1,false)", [b]);
-  facilityB = await scalar(db, "select public.onboard_facility('Facility B','Chicago','IL','surgery_center',$1)", ["20000000-0000-4000-8000-000000000002"]);
+  facilityB = await scalar(db, "select public.onboard_facility_with_registration('Facility B','Chicago','IL','surgery_center',$1,'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)", ["20000000-0000-4000-8000-000000000002"]);
   // Explicit database-operator bootstrap. Registration never performs this.
   await db.query("insert into private.platform_administrators(user_id,bootstrap_reason) values ($1,'Local authorization test bootstrap')", [admin]);
   await db.query("select set_config('request.jwt.claim.sub',$1,false)", [admin]);
@@ -56,9 +56,9 @@ after(async () => { await db.close(); });
 
 test("anonymous cannot read account tables or execute onboarding/approval", async () => {
   for (const table of ["profiles", "facilities", "facility_memberships"]) await denied(null, `select * from public.${table}`, [], "anon");
-  await denied(null, "select public.onboard_facility('Anon Facility','Madison','WI','hospital',gen_random_uuid())", [], "anon");
+  await denied(null, "select public.onboard_facility_with_registration('Anon Facility','Madison','WI','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)", [], "anon");
   await denied(null, "select public.review_facility($1,'approved',null)", [facilityA], "anon");
-  await denied(null, "select public.onboard_facility('Anon Facility','Madison','WI','hospital',gen_random_uuid())");
+  await denied(null, "select public.onboard_facility_with_registration('Anon Facility','Madison','WI','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)");
 });
 
 test("pending owner can view status but has no publishing, inquiry, or platform privileges", async () => {
@@ -111,18 +111,18 @@ test("profile metadata cannot promote users and only display_name is directly ed
 test("onboarding is transactional, pending, actor-owned, and idempotent", async () => {
   await asUser(a, async client => {
     const request = "20000000-0000-4000-8000-000000000099";
-    const first = await scalar(client, "select public.onboard_facility('New facility','New City','wi','hospital',$1)", [request]);
-    const second = await scalar(client, "select public.onboard_facility('New facility','New City','WI','hospital',$1)", [request]);
+    const first = await scalar(client, "select public.onboard_facility_with_registration('New facility','New City','wi','hospital',$1,'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)", [request]);
+    const second = await scalar(client, "select public.onboard_facility_with_registration('New facility','New City','WI','hospital',$1,'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)", [request]);
     assert.equal(first, second);
     const facility = (await client.query("select * from public.facilities where id=$1", [first])).rows[0];
     assert.equal(facility.owner_user_id, a); assert.equal(facility.status, "pending"); assert.equal(facility.state, "WI");
     assert.equal(await scalar(client, "select role from public.facility_memberships where facility_id=$1", [first]), "owner");
     assert.equal(await scalar(client, "select active_facility_id from public.profiles where id=$1", [a]), first);
   });
-  await denied(b, "select public.onboard_facility('Attack Facility','Chicago','IL','hospital',$1)", ["20000000-0000-4000-8000-000000000001"]);
-  await denied(unconfirmed, "select public.onboard_facility('Unconfirmed Facility','Chicago','IL','hospital',gen_random_uuid())");
+  await denied(b, "select public.onboard_facility_with_registration('Attack Facility','Chicago','IL','hospital',$1,'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)", ["20000000-0000-4000-8000-000000000001"]);
+  await denied(unconfirmed, "select public.onboard_facility_with_registration('Unconfirmed Facility','Chicago','IL','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)");
   const count = await scalar(db, "select count(*)::int from public.facilities");
-  await assert.rejects(asUser(a, client => client.query("select public.onboard_facility('X','City','WI','hospital',gen_random_uuid())")), { code: "22023" });
+  await assert.rejects(asUser(a, client => client.query("select public.onboard_facility_with_registration('X','City','WI','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)")), { code: "22023" });
   assert.equal(await scalar(db, "select count(*)::int from public.facilities"), count);
 });
 
@@ -136,7 +136,7 @@ test("a failure after facility insertion rolls back the facility, membership, an
       for each row execute function private.test_reject_membership();
   `);
   try {
-    await assert.rejects(asUser(a, client => client.query("select public.onboard_facility('Rollback Facility','City','WI','hospital',gen_random_uuid())")), /Injected membership failure/);
+    await assert.rejects(asUser(a, client => client.query("select public.onboard_facility_with_registration('Rollback Facility','City','WI','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)")), /Injected membership failure/);
     assert.equal(await scalar(db, "select count(*)::int from public.facilities"), count);
     assert.equal(await scalar(db, "select active_facility_id from public.profiles where id=$1", [a]), oldSelection);
   } finally {

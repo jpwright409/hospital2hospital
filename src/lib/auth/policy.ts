@@ -1,6 +1,6 @@
 export type FacilityStatus = "pending" | "approved" | "rejected" | "suspended";
 export type MembershipRole = "owner" | "administrator" | "inventory_editor" | "viewer";
-export type Facility = {
+export type Facility = { facility_npi?:string|null; registration_terms_version?:string|null; registration_accepted_at?:string|null;
   id: string;
   name: string;
   city: string;

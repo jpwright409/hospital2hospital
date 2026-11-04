@@ -19,7 +19,7 @@ before(async()=>{
  await db.query("insert into private.platform_administrators(user_id,bootstrap_reason) values($1,'Local admin fixture')",[admin]);
  await db.exec(await readFile(new URL('../supabase/operator/grant-conner-admin.sql',import.meta.url),'utf8'));
  await db.query("insert into private.platform_administrators(user_id,bootstrap_reason) values($1,'Unconfirmed administrator fixture')",[unconfirmed]);
- await who(owner);facility=await scalar("select public.onboard_facility('Test facility','Dallas','TX','hospital',gen_random_uuid())");await db.query("update public.facilities set status='approved' where id=$1",[facility]);
+ await who(owner);facility=await scalar("select public.onboard_facility_with_registration('Test facility','Dallas','TX','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)");await db.query("update public.facilities set status='approved' where id=$1",[facility]);
  await seedApprovedProducts(db,[{manufacturer:'Trusted test reference',catalog_number:'USERS-1',name:'Test supply',category:'General Surgery'}]);const pid=await scalar("select id from public.products where catalog_number='USERS-1'");
  listing=await scalar('select public.create_inventory_listing($1,$2,$3)',[facility,{id:pid},{quantity:1,quantity_unit:'each',units_per_package:1,price_usd:10,condition:'New / unopened',status:'active',sterile:false,single_use:true,packaging:'',notes:''}]);
  await who(null);
@@ -113,7 +113,7 @@ test('removal is fail-closed, irreversible, private, idempotent and preserves sh
  const target=randomUUID(),id=randomUUID();await who(null);await db.query("insert into auth.users(id,email,email_confirmed_at) values($1,'remove@example.test',now())",[target]);
  await db.query("insert into public.facility_memberships(facility_id,user_id,role) values($1,$2,'inventory_editor')",[facility,target]);
  await db.query('insert into public.saved_listings(user_id,listing_id) values($1,$2)',[target,listing]);
- await who(admin);const buyerFacility=await scalar("select public.onboard_facility('Other participant','Austin','TX','hospital',gen_random_uuid())");await db.query("update public.facilities set status='approved' where id=$1",[buyerFacility]);
+ await who(admin);const buyerFacility=await scalar("select public.onboard_facility_with_registration('Other participant','Austin','TX','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)");await db.query("update public.facilities set status='approved' where id=$1",[buyerFacility]);
  const conversation=await scalar('insert into public.conversations(listing_id,buyer_facility_id,seller_facility_id) values($1,$2,$3) returning id',[listing,buyerFacility,facility]);
  const message=await scalar("insert into public.conversation_messages(conversation_id,sequence,author_user_id,author_facility_id,author_label,body,request_id) values($1,1,$2,$3,'Original business author','Retained shared message',gen_random_uuid()) returning id",[conversation,target,facility]);
  await db.query("insert into public.watchlists(user_id,name,criteria) values($1,'Removal watch','{\"q\":\"supply\"}')",[target]);

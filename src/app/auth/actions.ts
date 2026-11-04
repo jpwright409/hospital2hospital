@@ -1,5 +1,6 @@
 "use server";
 
+import { registrationDeclaration } from "@/lib/auth/registration.mjs";
 import { captchaOptions } from "@/lib/auth/captcha.mjs";
 import { photoReturnPath } from "@/lib/auth/photo-return.mjs";
 import { redirect } from "next/navigation";
@@ -24,8 +25,9 @@ export async function register(_previous: ActionState, form: FormData): Promise<
   try {
     const captcha = captchaOptions(form, process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
     const supabase = await createClient();
+    const declaration = registrationDeclaration(form);
     const { error } = await supabase.auth.signUp({ email, password, options: {
-      ...captcha, data: { display_name: name }, emailRedirectTo: `${getSiteUrl()}/auth/callback`,
+      ...captcha, data: { display_name: name, ...declaration }, emailRedirectTo: `${getSiteUrl()}/auth/callback`,
     } });
     if (error) return { error: serviceError(error) };
     return { success: "Check your email to confirm your account, then log in. If you already have an account, use login or password recovery." };
@@ -107,7 +109,7 @@ export async function onboardFacility(_previous: ActionState, form: FormData): P
   try {
     const { supabase, user } = await authenticatedClient();
     if (!user || !user.email_confirmed_at) return { error: "Log in with a confirmed account before onboarding a facility." };
-    const { error } = await supabase.rpc("onboard_facility_with_contacts", { p_name: name, p_city: city, p_state: state, p_facility_type: type, p_request_id: requestId, p_contact: {secondary_name:value(form,"secondary_name"),secondary_email:value(form,"secondary_email"),secondary_phone:value(form,"secondary_phone")} });
+    const { error } = await supabase.rpc("onboard_facility_with_registration", { p_registration: registrationDeclaration(form), p_name: name, p_city: city, p_state: state, p_facility_type: type, p_request_id: requestId, p_contact: {secondary_name:value(form,"secondary_name"),secondary_email:value(form,"secondary_email"),secondary_phone:value(form,"secondary_phone")} });
     if (error) return { error: serviceError(error) };
   } catch (error) { return { error: serviceError(error) }; }
   revalidatePath("/account");

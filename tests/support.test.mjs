@@ -19,7 +19,7 @@ before(async()=>{
  for(const u of[a,b,admin,unconfirmed])await db.query('insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,$2,$3,$4)',[u,`${u}@example.test`,u===unconfirmed ? null : new Date().toISOString(),{role:'platform_administrator'}]);
  await db.query("insert into private.platform_administrators(user_id,bootstrap_reason) values($1,'Local support test bootstrap')",[admin]);
  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[a]);
- facility=await scalar("select public.onboard_facility('Pending facility','City','WI','hospital',gen_random_uuid())");ticket=await submit();photoTicket=await submit(randomUUID(),true);
+ facility=await scalar("select public.onboard_facility_with_registration('Pending facility','City','WI','hospital',gen_random_uuid(),'{}'::jsonb,'{\"facility_npi\":\"1234567893\",\"authorized_facility\":true,\"terms_accepted\":true,\"terms_version\":\"placeholder-2026-11-04\"}'::jsonb)");ticket=await submit();photoTicket=await submit(randomUUID(),true);
  await db.query("insert into public.facility_memberships(facility_id,user_id,role) values($1,$2,'administrator')",[facility,b]);
 });
 after(()=>db.close());

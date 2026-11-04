@@ -1,4 +1,5 @@
 "use client";
+import {expirationMatches} from "@/lib/inventory/filters.mjs";
 
 import Link from "next/link";
 import { BrandSignature } from "./brand";
@@ -59,7 +60,7 @@ export function Marketplace({ params = {}, savedOnly = false }: { params?: Searc
  const filters={categories:[...new Set([...categories,...data.products.map(p=>p.category)])],manufacturers:[...new Set(data.products.map(p=>p.manufacturer))].sort().map(name=>({id:name,name})),facilities:data.facilities.map(f=>({id:f.id,name:f.name+" (fictional)"}))};
  const results = data.listings.filter(l => {
   const p=data.products.find(p=>p.id===l.productId)!;const f=data.facilities.find(f=>f.id===l.facilityId)!;
-  return (savedOnly?data.saved.includes(l.id):l.status==="active") && matchesProduct(p,query.q) && (!query.category||p.category===query.category) && (!query.manufacturer||p.manufacturer===query.manufacturer) && (!query.seller_facility||l.facilityId===query.seller_facility) && (!query.location||(f.city+", "+f.state).toLowerCase().includes(query.location.toLowerCase()));
+  return (savedOnly?data.saved.includes(l.id):l.status==="active") && matchesProduct(p,query.q) && (!query.category||p.category===query.category) && (!query.manufacturer||p.manufacturer===query.manufacturer) && (!query.seller_facility||l.facilityId===query.seller_facility) && (!(query.states??[]).length||(query.states??[]).includes(f.state)) && expirationMatches(l.expiration??null,query.expiration_status??"");
  }).sort((a,b)=>query.sort==="price_low"?a.price-b.price:query.sort==="price_high"?b.price-a.price:b.createdAt.localeCompare(a.createdAt));
  return <div className="container page-section"><div className="marketplace-heading"><div className="page-heading"><span className="eyebrow">{savedOnly?"YOUR SHORTLIST":"FICTIONAL DEMO INVENTORY"}</span><h1>{savedOnly?"Saved listings":"Find your next essential."}</h1><p>{savedOnly?"Keep your saved demo supplies close at hand.":"Explore fictional facility inventory. No real stock or inquiries."}</p></div>{!savedOnly && <aside className="featured-banner"><h2>Featured Listing</h2><p className="muted">Featured listing approval is available in connected mode. Demo stock is fictional.</p></aside>}</div><MarketplaceSearch key={JSON.stringify(query)} query={query} filters={filters} path={savedOnly?"/saved":"/marketplace"} demo/><div className="results-toolbar"><strong>{results.length} {savedOnly?"saved listings":"demo listings"}</strong></div>{results.length?<div className="listing-grid">{results.map(l=><div key={l.id}>{l.status==="inactive" && <span className="badge">Inactive listing</span>}<ListingCard listing={l}/></div>)}</div>:<div className="empty"><h2>No matching listings</h2><p>Try another catalog number or clear your filters.</p><Link className="button primary" href="/marketplace">Browse inventory</Link></div>}</div>;
 }

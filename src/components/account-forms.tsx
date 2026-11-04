@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, type ReactNode } from "react";
+import { RegistrationFields } from "./registration-fields";
 import { Turnstile } from "./turnstile";
 import Link from "next/link";
 import { register, login, logout, forgotPassword, resendConfirmation, updatePassword, onboardFacility, selectFacility, reviewFacility, type ActionState } from "@/app/auth/actions";
@@ -39,6 +40,7 @@ export function AuthForm({ kind, welcome = false, returnTo }: { kind: "register"
       {password && <label>{kind === "update" ? "New password" : "Password"}<input name="password" type="password" required
         minLength={kind === "login" ? 1 : 12} maxLength={128} autoComplete={kind === "login" ? "current-password" : "new-password"}/>
         {kind !== "login" && <small>12–128 characters. Meet any additional Supabase password requirements.</small>}</label>}
+      {kind === "register" && <RegistrationFields/>}
       {kind === "update" && <label>Confirm new password<input name="confirm_password" type="password" required minLength={12} maxLength={128} autoComplete="new-password"/></label>}
     </ActionForm>
     <div className="account-links">
@@ -54,13 +56,14 @@ export function LogoutForm() {
   return <ActionForm action={logout} submit="Log out" className="logout-form"/>;
 }
 
-export function OnboardingForm({ requestId }: { requestId: string }) {
+export function OnboardingForm({ requestId, npi="" }: { requestId: string; npi?:string }) {
   return <ActionForm action={onboardFacility} submit="Submit for approval">
     <input type="hidden" name="request_id" value={requestId}/>
     <label>Facility name<input name="name" required minLength={2} maxLength={160} autoComplete="organization"/></label>
     <div className="form-grid"><label>City<input name="city" required minLength={2} maxLength={100} autoComplete="address-level2"/></label>
       <label>State (two-letter code)<input name="state" required pattern="[A-Za-z]{2}" minLength={2} maxLength={2} autoComplete="address-level1"/></label></div>
     <label>Facility type<select name="facility_type"><option value="hospital">Hospital</option><option value="surgery_center">Surgery center</option><option value="surgical_hospital">Surgical hospital</option><option value="physician_office">Physician office</option><option value="other">Other</option></select></label>
+    <RegistrationFields npi={npi}/>
     <h3>Secondary facility contact (optional)</h3><label>Name<input name="secondary_name" maxLength={120}/></label><label>Work email<input name="secondary_email" type="email" maxLength={254}/></label><label>Phone<input name="secondary_phone" maxLength={40}/></label><p className="muted">Secondary contact details remain private to facility owners/administrators and grant no account access.</p><p className="muted">You will become this facility’s owner. Its status starts pending. Ownership does not grant platform administrator permissions.</p>
   </ActionForm>;
 }

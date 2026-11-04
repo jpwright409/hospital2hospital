@@ -4,6 +4,7 @@ export function emailPayload(job, { from, siteUrl }) {
  const base=origin.origin;
  if(job.kind==='referral') return {from,to:[job.recipient],subject:'An invitation to Hospital2Hospital',
   text:`${job.payload.referrer || 'A colleague'} from ${job.payload.facility} is inviting you to join Hospital2Hospital's no-cost marketplace.\n\nConnect with healthcare facilities that have excess surgical supplies and equipment.\nRegister: ${base}/auth/register\n\nRegistration and facility approval are required. This invitation does not grant facility membership. If you are not interested, no action is required. We will not add you to a mailing list.`};
+ if(job.kind==='facility_approved') return {from,to:[job.recipient],subject:'Your facility has been verified - Hospital2Hospital',text:`Your facility, ${job.payload.facility}, has been verified. You can now participate in the Hospital2Hospital marketplace.\n\nBrowse inventory: ${base}/marketplace\nManage your facility: ${base}/account\n\nSign in with your confirmed account to get started.`};
  if(job.kind!=='watchlist') throw new Error('Unsupported email type.');
  return {from,to:[job.recipient],subject:'New inventory matches your Hospital2Hospital watchlist',
   text:`New inventory matched your watchlist "${job.payload.watchlist}":\n${job.payload.product}\nCatalog # ${job.payload.catalog}\n\nView current availability: ${base}/listings/${job.listing_id}\n\nA match is not a reservation. Availability may change.\nTurn off email alerts, pause or remove this watchlist: ${base}/watchlist`};
