@@ -1,3 +1,7 @@
+## Watchlist email checkbox: website flag vs worker settings
+
+Vercel Production needs H2H_EMAIL_ENABLED=true and a redeploy to enable watchlist email opt-in and referral queuing. The website deliberately does not require RESEND_API_KEY, H2H_EMAIL_FROM or SUPABASE_EMAIL_SECRET_KEY for this check; those belong to the independently configured GitHub worker. The shared helper controls both UI and server-action validation. If the checkbox remains disabled after the code fix, verify the flag is set for Production (not only Preview/Development) and redeploy. An enabled checkbox confirms queuing is enabled, not that provider delivery has succeeded; check GitHub Actions and Resend separately.
+
 ## November 4: manufacturer spelling repair (022)
 
 Apply supabase/migrations/20261104002200_manufacturer_name_encoding.sql after 021 to repair two document-import encoding artifacts: GI Supply, Inc and Mölnlycke Health Care. It preserves existing manufacturer IDs and product relationships, avoids collisions with an existing canonical name, and uses SQL Unicode escapes for editor/terminal compatibility. No application dependency on this repair; it can run after deployment. Migration 021 was verified installed through a read-only public search RPC before publication; 022 has not been applied by the agent.
