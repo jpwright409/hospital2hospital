@@ -28,7 +28,7 @@ export async function getInventoryListing(id: string): Promise<InventoryListing 
 }
 export async function catalogProducts(q = "", manufacturerId = ""): Promise<CatalogProduct[]> {
   const supabase = await createClient();
-  let request = supabase.from("products").select("id,manufacturer_id,catalog_number,name,category,description,product_kind,manufacturers(name)").order("name").limit(50);
+  let request = supabase.from("products").select("id,manufacturer_id,catalog_number,name,category,description,product_kind,manufacturers(name)").is("archived_at",null).order("name").limit(50);
   // Escape PostgREST grammar and LIKE wildcards; catalog lookup uses literal text.
   const safe = q.slice(0,100).replace(/[%_*(),.\\]/g," ").trim();
   if (manufacturerId) request = request.eq("manufacturer_id",manufacturerId);

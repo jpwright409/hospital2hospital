@@ -19,15 +19,15 @@ test('worker default invocation reports readiness without connecting, sending or
 });
 
 test('batch claims at most 20, records exact token/provider receipts and handles an empty queue',async()=>{
- const calls=[];const client={rpc:async(name,args)=>{calls.push([name,args]);return name==='claim_email_jobs_v2'?{data:[job]}:{error:null};}};
+ const calls=[];const client={rpc:async(name,args)=>{calls.push([name,args]);return name==='claim_email_jobs_v3'?{data:[job]}:{error:null};}};
  const summary=await runEmailBatch(client,{}, {send:async()=> 'provider-id',pause:async()=>{}});
- assert.deepEqual(summary,{claimed:1,accepted:1,retry:0});assert.deepEqual(calls,[['claim_email_jobs_v2',{p_limit:20}],['finish_email_job',{p_id:job.id,p_token:job.claim_token,p_provider_id:'provider-id'}]]);
+ assert.deepEqual(summary,{claimed:1,accepted:1,retry:0});assert.deepEqual(calls,[['claim_email_jobs_v3',{p_limit:20}],['finish_email_job',{p_id:job.id,p_token:job.claim_token,p_provider_id:'provider-id'}]]);
  assert.deepEqual(await runEmailBatch({rpc:async()=>({data:[]})},{}),{claimed:0,accepted:0,retry:0});
 });
 
 test('provider rejection and uncertain outcomes retain the same delivery identity for bounded retry',async()=>{
  const keys=[],receipts=[];
- const client={rpc:async(name,args)=>name==='claim_email_jobs_v2'?{data:[job]}:(receipts.push(args),{error:null})};
+ const client={rpc:async(name,args)=>name==='claim_email_jobs_v3'?{data:[job]}:(receipts.push(args),{error:null})};
  const config=emailConfiguration(env).delivery;
  const transport=async(url,options)=>{keys.push(options.headers['Idempotency-Key']);return {ok:false};};
  for(let i=0;i<2;i++){const summary=await runEmailBatch(client,config,{send:(j,c)=>deliverEmail(j,c,transport),pause:async()=>{}});assert.equal(summary.retry,1);}
@@ -37,7 +37,7 @@ test('provider rejection and uncertain outcomes retain the same delivery identit
 test('claim failure never sends; receipt failure stops before sending later claimed messages',async()=>{
  let sends=0;
  await assert.rejects(runEmailBatch({rpc:async()=>({error:{message:'private database error'}})}, {},{send:async()=>{sends++;}}),/Could not claim/);assert.equal(sends,0);
- const client={rpc:async(name)=>name==='claim_email_jobs_v2'?{data:[job,{...job,id:'second'}]}:{error:{message:'private token'}}};
+ const client={rpc:async(name)=>name==='claim_email_jobs_v3'?{data:[job,{...job,id:'second'}]}:{error:{message:'private token'}}};
  await assert.rejects(runEmailBatch(client,{}, {send:async()=>{sends++;return 'provider-id';},pause:async()=>{}}),/receipt could not be recorded/);assert.equal(sends,1);
 });
 

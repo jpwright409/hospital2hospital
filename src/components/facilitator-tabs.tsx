@@ -5,6 +5,8 @@ import {usePathname} from "next/navigation";
 const tabs=[
   ["/admin/facilities","Facility approvals"],
   ["/admin/products","Product approvals"],
+  ["/admin/catalog","Product Review"],
+  ["/admin/listings","Current Marketplace Listings"],
   ["/admin/featured","Featured listing review"],
   ["/admin/support","Support tickets"],
   ["/admin/users","Users"],
