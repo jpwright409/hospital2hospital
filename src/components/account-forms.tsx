@@ -29,7 +29,7 @@ export function ActionForm({ action, children, submit, className = "", captcha =
 
 export function AuthForm({ kind, welcome = false, returnTo }: { kind: "register" | "login" | "forgot" | "update" | "resend"; welcome?: boolean; returnTo?:string }) {
   const password = kind !== "forgot" && kind !== "resend";
-  const loginPath = welcome ? "/" : "/auth/login";
+  const loginPath = welcome ? "/?welcome=login" : "/auth/login";
   const forgotPath = welcome ? "/?welcome=forgot" : "/auth/forgot-password";
   return <>
     <ActionForm key={kind} captcha={kind !== "update"} action={{ register, login, forgot: forgotPassword, update: updatePassword, resend: resendConfirmation }[kind]}

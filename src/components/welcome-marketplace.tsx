@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {useEffect,useRef,useState} from "react";
 
-export type PreviewListing={id:string;name:string;manufacturer:string;catalogNumber:string;priceUsd:number;quantityUnit:string;negotiable:boolean;facilityName:string;location:string;photoUrl:string|null};
+export type PreviewListing={id:string;name:string;manufacturer:string;catalogNumber:string;priceUsd:number;quantityUnit:string;negotiable:boolean;location:string;photoUrl:string|null};
 function PreviewPhoto({listing}:{listing:PreviewListing}){
  const [failed,setFailed]=useState(false);
  return <div className="welcome-preview-photo">{listing.photoUrl&&!failed?<Image src={listing.photoUrl} alt="" width={420} height={260} unoptimized onError={()=>setFailed(true)}/>:<div className="welcome-preview-placeholder"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4 9-4M12 11v10"/></svg><span>{failed?"Photo unavailable":"No photo provided"}</span></div>}</div>;
@@ -50,7 +50,7 @@ export function WelcomeMarketplace(){
    {loading?<p className="welcome-preview-state" role="status">Loading marketplace listings…</p>:error?<div className="welcome-preview-state" role="status"><p>Listing previews are temporarily unavailable.</p><button type="button" className="button secondary" onClick={()=>{setLoading(true);setRetry(v=>v+1);}}>Try again</button></div>:!items.length?<p className="welcome-preview-state">New listings will appear here as approved facilities share inventory.</p>:<>
     <p className="welcome-scroll-hint">Scroll to explore current listings. Sign in to save items and connect with facilities.</p>
     <div className="welcome-listing-rail" ref={rail} role="region" aria-label="Current marketplace listings; scroll horizontally to explore" tabIndex={0} onMouseEnter={()=>{interacting.current=true;}} onMouseLeave={()=>{interacting.current=false;}} onPointerDown={()=>setPaused(true)} onWheel={()=>setPaused(true)}>
-     {items.map(item=><article className="welcome-preview-card" key={item.id}><Link href={`/listings/${item.id}`} prefetch={false}><PreviewPhoto key={item.photoUrl??'no-photo'} listing={item}/><div className="welcome-preview-copy"><p className="welcome-preview-maker">{item.manufacturer}</p><h3>{item.name}</h3><p className="welcome-preview-catalog">CAT # {item.catalogNumber}</p><p className="welcome-preview-price">{new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(item.priceUsd)} <span>/ {item.quantityUnit}{item.negotiable?' · Negotiable':''}</span></p><p className="welcome-preview-facility">{item.facilityName}<span>{item.location}</span></p></div></Link></article>)}
+     {items.map(item=><article className="welcome-preview-card" key={item.id}><Link href={`/listings/${item.id}`} prefetch={false}><PreviewPhoto key={item.photoUrl??'no-photo'} listing={item}/><div className="welcome-preview-copy"><p className="welcome-preview-maker">{item.manufacturer}</p><h3>{item.name}</h3><p className="welcome-preview-catalog">CAT # {item.catalogNumber}</p><p className="welcome-preview-price">{new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(item.priceUsd)} <span>/ {item.quantityUnit}{item.negotiable?' · Negotiable':''}</span></p><p className="welcome-preview-facility">{item.location}</p></div></Link></article>)}
     </div>
    </>}
   </section>
