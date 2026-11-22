@@ -8,7 +8,11 @@ const field=(f:FormData,k:string)=>String(f.get(k)??"").trim();
 export async function saveWatchlist(_s:ActionState,form:FormData):Promise<ActionState> {
  const {supabase,user}=await requireUser();const id=field(form,"id");
  if(!validUuid(id)) return {error:"Refresh the form and try again."};
- const criteria:Record<string,string>={};for(const key of ["q","catalog_number","manufacturer","procedure_type","product_kind"]) if(field(form,key)) criteria[key]=field(form,key);
+ const criteria:Record<string,string>={};for(const key of ["q","catalog_number","manufacturer","procedure_type","product_kind","min_price","max_price"]) if(field(form,key)) criteria[key]=field(form,key);
+ if(form.get("negotiable")==="yes")criteria.negotiable="yes";
+ for(const key of ["min_price","max_price"])if(criteria[key]&&(!/^\d{1,10}(\.\d{1,2})?$/.test(criteria[key])||Number(criteria[key])>9999999999.99))return {error:"Enter a valid USD price between 0 and 9,999,999,999.99, with at most two decimal places."};
+ if(criteria.min_price&&criteria.max_price&&Number(criteria.min_price)>Number(criteria.max_price))return {error:"Minimum price must be less than or equal to maximum price."};
+ if(criteria.min_price||criteria.max_price||criteria.negotiable){const support=await supabase.rpc("watchlist_price_filters_available");if(support.error||support.data!==true)return {error:"Price filters are not available yet. Refresh or contact support before saving."};}
  if(!Object.keys(criteria).length) return {error:"Choose at least one filter to watch."};
  const email=form.get("email_enabled")==="yes";
  if(email && !emailDeliveryConfigured()) return {error:"Email delivery is not configured. You can save this watchlist with email alerts unchecked."};

@@ -3,16 +3,17 @@ import { useRef,useState } from "react";
 import { ActionForm } from "./account-forms";
 import { saveWatchlist,deleteWatchlist,referFacility } from "@/app/community-actions";
 import { procedures } from "@/lib/inventory/types";
+import {WatchlistSku,WatchlistPrice} from "./watchlist-filters";
 export type Watchlist={id:string;name:string;criteria:Record<string,string>;enabled:boolean;email_enabled:boolean};
-export function WatchlistForm({watch,manufacturers,emailReady,existing=false}:{watch:Watchlist;manufacturers:{id:string;name:string}[];emailReady:boolean;existing?:boolean}) {
+export function WatchlistForm({watch,manufacturers,emailReady,priceReady=false,existing=false}:{watch:Watchlist;manufacturers:{id:string;name:string}[];emailReady:boolean;priceReady?:boolean;existing?:boolean}) {
  return <ActionForm action={saveWatchlist} submit={existing ? "Update watchlist" : "Create watchlist"}>
  <input type="hidden" name="id" value={watch.id}/><input type="hidden" name="existing" value={existing ? "yes" : "no"}/>
  <label>Watchlist name<input name="name" required minLength={2} maxLength={120} defaultValue={watch.name}/></label>
+ <WatchlistSku catalog={watch.criteria.catalog_number??""} manufacturer={watch.criteria.manufacturer??""} manufacturers={manufacturers}/>
  <div className="form-grid"><label>Search words<input name="q" maxLength={200} defaultValue={watch.criteria.q}/></label>
- <label>Exact catalog / SKU<input name="catalog_number" maxLength={100} defaultValue={watch.criteria.catalog_number}/></label>
- <label>Manufacturer<select name="manufacturer" defaultValue={watch.criteria.manufacturer??""}><option value="">Any manufacturer</option>{manufacturers.map(m=><option key={m.id} value={m.name}>{m.name}</option>)}</select></label>
  <label>Procedure<select name="procedure_type" defaultValue={watch.criteria.procedure_type??""}><option value="">Any procedure</option>{procedures.map(p=><option key={p}>{p}</option>)}</select></label>
  <label>Product type<select name="product_kind" defaultValue={watch.criteria.product_kind??""}><option value="">Any type</option><option value="capital">Capital equipment</option><option value="disposable">Disposable</option></select></label></div>
+ {priceReady&&<WatchlistPrice criteria={watch.criteria}/>}
  <div className="watchlist-options">
  <label><input name="enabled" type="checkbox" value="yes" defaultChecked={watch.enabled}/> Watch for new listings</label>
  <label><input name="email_enabled" type="checkbox" value="yes" disabled={!emailReady} defaultChecked={emailReady && watch.email_enabled}/> Email me when a new listing matches</label>

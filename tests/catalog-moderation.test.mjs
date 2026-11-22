@@ -24,7 +24,7 @@ before(async()=>{
  await db.exec(`create role anon nologin;create role authenticated nologin;create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,raw_user_meta_data jsonb default '{}',banned_until timestamptz,deleted_at timestamptz);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
  await installStorageContract(db);
  const migrations=(await readdir(new URL('../supabase/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort();
- for(const f of migrations.filter(f=>!f.startsWith('20261105002300')))await db.exec(await readFile(new URL('../supabase/migrations/'+f,import.meta.url),'utf8'));
+ for(const f of migrations.filter(f=>f<'20261105002300'))await db.exec(await readFile(new URL('../supabase/migrations/'+f,import.meta.url),'utf8'));
  for(const id of[owner,editor,buyer,admin,unconfirmed,viewer])await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,$3)',[id,`${id}@example.test`,id===unconfirmed?null:new Date().toISOString()]);
  for(const id of[admin,unconfirmed])await db.query("insert into private.platform_administrators(user_id,bootstrap_reason) values($1,'Controlled test administrator')",[id]);
  await who(owner);facility=await enroll('Review fixture seller');await who(buyer);buyerFacility=await enroll('Review fixture buyer');
@@ -34,6 +34,7 @@ before(async()=>{
  await who(editor);knownLegacy=await stock();await db.query("insert into private.listing_draft_requests(request_id,user_id,facility_id,listing_id,payload) values(gen_random_uuid(),$1,$2,$3,'{}')",[editor,facility,knownLegacy]);
  await who(owner);legacy=await stock();
  await db.exec(await readFile(new URL('../supabase/migrations/20261105002300_catalog_review_listing_moderation.sql',import.meta.url),'utf8'));
+ for(const f of migrations.filter(f=>f>'20261105002300_catalog_review_listing_moderation.sql'))await db.exec(await readFile(new URL('../supabase/migrations/'+f,import.meta.url),'utf8'));
  await who(editor);listing=await stock();await who(buyer);thread=await scalar("select public.contact_listing_seller($1,$2,'Fixture inquiry',gen_random_uuid())",[listing,buyerFacility]);
 });
 after(()=>db.close());

@@ -1,5 +1,30 @@
 # Ryan's feedback: implementation and remaining decisions
 
+## November 22: shipping proposal — discussion only, not implemented
+
+Shipping labels after a seller marks stock sold are feasible. Current listings record stock/status, not a completed order, confirmed buyer, shipping address, parcel weight/dimensions or payer. A Sold flag cannot itself create a correctly addressed label or authorize a shipping charge. The action should open a review flow, never purchase automatically.
+
+Planning estimates below are engineering hours, not quotes or calendar delivery promises. They assume a US-domestic, one-parcel pilot and working test accounts. Provider onboarding, commercial approval, postage, subscriptions and API fees are separate.
+
+| Option | Scope | Estimated effort |
+| --- | --- | --- |
+| Carrier website handoff | A seller-only Create Shipping Label action on sold stock opens a choice of FedEx/UPS websites. Facility signs in and completes the shipment there. No connected accounts, embedded rates, automatic prefill or H2H label storage. | 4–8 hours |
+| Multi-carrier provider, recommended integrated route | Use a marketplace/platform product such as Shippo with isolated facility connections, existing carrier accounts, rate selection, explicit label purchase, download/reprint, tracking and cancellation/void handling. Confirm provider support for facility-paid billing and account isolation before choosing it. | 60–90 hours |
+| Direct FedEx and UPS | Separate account authorization/onboarding, rate/ship/void/tracking integrations, separate error handling and provider approval/certification where applicable. Highest maintenance burden. | 100–150 hours |
+
+Recommended integrated MVP work:
+
+1. Confirm who pays (seller, recipient or third party), whether a facility can connect both carriers, and choose a provider-supported billing model. Do not put all facilities on a shared H2H billing account by default.
+2. Add private facility ship-from/contact information and securely managed facility-specific account connections. Never store carrier passwords or expose tokens in the browser. Live owner/editor eligibility and facility isolation must apply independently on each operation; an administrator account alone must not gain shipping access to a facility.
+3. Add a private shipment record tied to the actual listing and selling facility, with manually entered/confirmed buyer contact/address and parcel measurements. Do not infer a buyer from conversations or treat a sold listing as a completed order.
+4. Seller sees a Create Shipping Label icon on eligible sold inventory. The flow confirms addresses, weight, dimensions, service/rate, carrier account, payer and cost before purchase. Status becomes View/Print Label after successful creation.
+5. Implement stable purchase request IDs, duplicate prevention, uncertain-result reconciliation, printable PDF storage/download, tracking updates, reprint and provider-supported void/cancellation. Retrying a download must never purchase a second label. Keep financial/account activity audited, webhook verification server-side and label/address access private.
+6. Test carrier/provider sandboxes, authorization revocation, cross-facility denial, duplicate/retry/timeout cases, void outcomes and a controlled real shipment with the account holder's authorization.
+
+Initial scope excludes freight/pallets/capital-equipment logistics, international/customs, refrigeration, hazardous/restricted goods, pickups, returns and automatic shipment emails. Decide these separately if needed. The deferred registration/contact redesign is not automatically part of this shipping proposal.
+
+Sources checked November 22, 2026: [Shippo for platforms](https://goshippo.com/shippo-for-platforms), [connecting carrier accounts](https://support.goshippo.com/hc/en-us/articles/360024209911-How-to-Connect-Your-Own-Carrier-Account), [UPS OAuth authorization-code integration](https://github.com/UPS-API/api-documentation/blob/main/OAuthAuthCode.yaml), [FedEx integrator onboarding](https://developer.fedex.com/api/en-us/get-started/integrator-provider.html). Estimates are our implementation judgment, not provider promises. No shipping code, provider credentials, purchased labels or account connections have been added.
+
 Updated October 11, 2026. This audit describes local implementation, not hosted migration or email delivery verification.
 
 | Feedback | Result |
