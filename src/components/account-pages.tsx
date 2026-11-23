@@ -12,7 +12,7 @@ export function WelcomeLogin({ kind = "login" }: { kind?: "login" | "register" |
   const descriptions = { login: "Sign in to find your next essential.", register: "Confirm your work email, then submit your facility for approval.", forgot: "Request a secure email link to reset your password.", resend: "Request a new confirmation link if yours expired or did not arrive." };
   return <div className="welcome-login">
     <Link className="welcome-back-link" href="/">← Back to Hospital2Hospital</Link>
-    <Image className="welcome-logo" src={fullLogo} alt="Hospital2Hospital — Better connections. Less waste." sizes="(max-width: 600px) 90vw, 520px" preload/>
+    <Image className="welcome-logo" src={fullLogo} alt="Hospital2Hospital — Verified facilities. Direct trade. Zero fees." sizes="(max-width: 600px) 90vw, 520px" preload/>
     <div className="welcome-card-row"><section className="panel welcome-card" aria-labelledby="welcome-title">
       <h1 id="welcome-title">{titles[kind]}</h1>
       <p className="welcome-description">{descriptions[kind]}</p>
