@@ -3,6 +3,7 @@ import { getAppMode } from "@/lib/app-mode";
 import { requireUser, serviceError } from "@/lib/auth/server";
 import { listingUpdateSummary, type ListingUpdate } from "@/lib/notifications";
 import { MarkListingUpdatesRead, RefreshNotifications } from "@/components/notification-forms";
+import {PendingOfferSummary} from "@/components/purchase-offers";
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   if (getAppMode() === "demo") return <div className="container page-section"><h1>Notifications</h1><p className="notice">Persistent notifications require connected mode. Demo inventory is fictional.</p></div>;
@@ -23,6 +24,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
       {messageFacilities.filter(f => Number(f.unread) > 0).map(f => <p key={f.id}>{f.name}: {f.unread} unread</p>)}
       <Link className="text-link" href="/inbox">Open facility inbox and switch facilities →</Link>
     </section>
+    <PendingOfferSummary/>
     <h2>Saved listing updates</h2><p className="muted">Changes recorded after you save a listing. Removing a save removes its notification history. Notices describe the listing at the time of the change.</p>
     {!!unreadIds.length && <MarkListingUpdatesRead ids={unreadIds} all/>}
     <div className="conversation-list">{result.items.map(n => <article className="panel" key={n.id}>

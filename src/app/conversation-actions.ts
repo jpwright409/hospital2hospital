@@ -12,7 +12,8 @@ export async function switchMessageFacility(_state:InventoryState,form:FormData)
   const {error}=await supabase.rpc("select_message_facility",{p_facility_id:id});
   if(error) return {error:serviceError(error)};
   revalidatePath("/","layout");
-  redirect("/inbox");
+  const destination=field(form,"return_to");
+  redirect(destination==="/account/offers"||(destination.startsWith("/inbox/")&&validUuid(destination.slice(7)))?destination:"/inbox");
 }
 function messagePayload(form:FormData) {
   const body=field(form,"body");const request=field(form,"request_id");

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import { AuthForm, FacilitySelection, LogoutForm } from "./account-forms";
 import fullLogo from "../../public/brand/Full Main Logo.png";
+import {PendingOfferSummary} from "./purchase-offers";
 
 export function WelcomeLogin({ kind = "login" }: { kind?: "login" | "register" | "forgot" | "resend" }) {
   const titles = { login: "Welcome back!", register: "Create your facility account", forgot: "Recover your account", resend: "Confirm your email" };
@@ -71,12 +72,12 @@ export async function AccountWorkspace({ notice }: { notice?: string }) {
         </div> : account.facilities.length > 0 && <p className="notice">Select a facility. An inaccessible or revoked selection does not grant permission.</p>}
       </section>
       <section className="panel"><h2>Account actions</h2><div className="account-links vertical">
-        <Link href="/account/contacts">Manage facility contacts</Link><Link href="/watchlist">Manage watchlists</Link><Link href="/refer">Refer a facility</Link><Link href="/dashboard">Manage facility inventory</Link><Link href="/inbox">Facility inbox</Link><Link href="/account/onboarding">Onboard another facility</Link><Link href="/auth/update-password">Update password</Link>
+        <Link href="/account/contacts">Manage facility contacts</Link><Link href="/watchlist">Manage watchlists</Link><Link href="/refer">Refer a facility</Link><Link href="/dashboard">Manage facility inventory</Link><Link href="/inbox">Facility inbox</Link><Link href="/account/offers">Pending offers</Link><Link href="/account/onboarding">Onboard another facility</Link><Link href="/auth/update-password">Update password</Link>
         <Link href="/marketplace">Browse marketplace</Link><Link href="/saved">View private saved listings</Link>
         {account.isPlatformAdministrator && <Link href="/admin">Facilitator Dashboard</Link>}
       </div><p>Facility ownership and platform administration are separate permissions. No account is automatically promoted.</p></section>
     </div>
-    <p className="notice">Connected inventory and private saved listings use Supabase. Demo stock is never used after a connection failure. Listing photos and private conversations are connected; watchlist email alerts are optional and require configured delivery.</p>
+    <PendingOfferSummary/>
   </div>;
 }
 

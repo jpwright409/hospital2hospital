@@ -7,11 +7,12 @@ import { switchMessageFacility } from "@/app/conversation-actions";
 import { ActionForm } from "./account-forms";
 
 export type MessageFacility = { id: string; name: string; unread: number };
-export function MessageFacilitySwitcher({ facilities, activeId }: {
-  facilities: MessageFacility[]; activeId: string | null;
+export function MessageFacilitySwitcher({ facilities, activeId,returnTo }: {
+  facilities: MessageFacility[]; activeId: string | null;returnTo?:string;
 }) {
   if (!facilities.length) return null;
   return <ActionForm action={switchMessageFacility} submit="Switch facility" className="message-facility-switcher">
+    {returnTo&&<input type="hidden" name="return_to" value={returnTo}/>}
     <label>Facility inbox<select key={activeId ?? "none"} name="facility_id" defaultValue={activeId ?? ""} required>
       <option value="" disabled>Choose an approved facility</option>
       {facilities.map(f => <option key={f.id} value={f.id}>{f.name}{Number(f.unread) > 0 ? ` (${f.unread} unread)` : ""}</option>)}

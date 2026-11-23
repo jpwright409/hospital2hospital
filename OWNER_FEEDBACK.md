@@ -1,5 +1,13 @@
 # Ryan's feedback: implementation and remaining decisions
 
+## November 23: facility exchange workflow and free shipping handoff
+
+Implemented buyer purchase requests inside existing facility conversations, with requested quantity, list/custom unit price and exact USD total. The user selected partial quantities. Offers are facility-shared; eligible colleagues can review them, while notification read status remains personal. Seller owners/inventory editors accept, deny or counter; buyers accept/decline a seller counter or withdraw an unaccepted request. Decline closes the offer; acceptance allocates stock immediately. Full allocation marks sold; partial allocation leaves only the remaining quantity available. This is an inventory agreement, not payment collection or proof that payment happened.
+
+Every transition creates an immutable structured chat event and ordinary message, so existing inbox/header notifications work without a new paid service or email workflow. Profile/My account and Notifications link to Pending Offers, with purchases/sales/history and actions in the corresponding chat. Exact retries and expected revisions prevent duplicate allocation; competing buyers are serialized on the same listing. Seller shipping is a Create Shipping Label icon/card with fixed external FedEx/UPS links. Sellers create/pay for labels directly on carrier websites, then manually confirm carrier and optional tracking in H2H. H2H receives no card/carrier credentials, buys no labels and makes no carrier API calls. Opening a link is not shipment confirmation.
+
+Migration 025 is required before publication; user reports it applied. There is no in-app cancellation/restoration after acceptance: facilities discuss any failed arrangement and seller inventory managers reconcile stock using existing controls. Buyer address/package details remain in direct coordination and the carrier website. No checkout, payment verification, automated carrier tracking, carrier account integration, buyer receipt confirmation, offer emails, freight or multi-package booking added. The larger integrated Shippo options below remain proposals only.
+
 ## November 22: shipping proposal — discussion only, not implemented
 
 Shipping labels after a seller marks stock sold are feasible. Current listings record stock/status, not a completed order, confirmed buyer, shipping address, parcel weight/dimensions or payer. A Sold flag cannot itself create a correctly addressed label or authorize a shipping charge. The action should open a review flow, never purchase automatically.
